@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Konseling Upaya Berhenti Merokok</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 50;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.6);
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 2rem;
+            border-radius: 0.75rem;
+            width: 90%;
+            max-width: 500px;
+            animation: fadeIn 0.3s;
+        }
+        .close-btn {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .form-section {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .form-section h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #cbd5e1;
+            padding-bottom: 0.5rem;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #475569;
+            margin-bottom: 0.25rem;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+             width: 100%;
+             padding: 0.5rem 0.75rem;
+             border: 1px solid #cbd5e1;
+             border-radius: 0.375rem;
+             font-size: 0.875rem;
+             box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        }
+        /* Style untuk placeholder dropdown */
+        select {
+            color: #1e293b; /* Warna teks default */
+        }
+        select.placeholder-style {
+            color: #9ca3af; /* Warna teks redup untuk placeholder */
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 p-4 md:p-8">
+
+    <div class="w-full max-w-6xl mx-auto">
+        <!-- Layar Daftar Klien (Dashboard) -->
+        <div id="client-list-screen" class="fade-in">
+            <header class="text-center mb-8">
+                <h1 class="text-4xl font-bold text-teal-700">Dasbor Konseling UBM</h1>
+                <p class="text-slate-600 mt-2">Manajemen Klien Upaya Berhenti Merokok</p>
+                <p class="text-slate-500 mt-1 font-semibold">Puskesmas Landasan Ulin Timur</p>
+            </header>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold text-teal-700">Daftar Klien</h2>
+                        <button id="add-new-client-btn" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
+                            + Tambah Klien Baru
+                        </button>
+                    </div>
+                    <div id="client-list-container" class="space-y-3 max-h-[30rem] overflow-y-auto pr-2">
+                        <!-- Daftar Klien akan di-render oleh JS -->
+                    </div>
+                </div>
+                 <div class="space-y-6">
+                    <div class="bg-white p-6 rounded-xl shadow-lg text-center">
+                        <h2 class="text-xl font-bold text-center mb-2 text-teal-700">Jumlah Klien Konseling</h2>
+                        <p id="total-clients-display" class="text-5xl font-bold text-slate-800 mt-2">0</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-lg">
+                        <h2 class="text-xl font-bold text-center mb-4 text-teal-700">Klien Berdasarkan Status</h2>
+                        <canvas id="client-status-chart"></canvas>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-lg">
+                        <h2 class="text-xl font-bold text-center mb-4 text-teal-700">Klien Berdasarkan Jenis Kelamin</h2>
+                        <canvas id="client-gender-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Layar Detail/Form Klien -->
+        <div id="client-detail-screen" class="hidden fade-in">
+             <header class="flex justify-between items-center mb-8">
+                <h1 id="form-title" class="text-3xl font-bold text-teal-700">Tambah Klien Baru</h1>
+                <button id="back-to-list-btn" class="bg-slate-500 hover:bg-slate-600 text-white font-bold py-2 px-5 rounded-lg transition duration-300">
+                    &larr; Kembali
+                </button>
+            </header>
+
+            <form id="client-form">
+                <input type="hidden" id="client-id">
+                
+                <!-- IDENTITAS -->
+                <section class="form-section">
+                    <h3>Identitas Klien</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="form-group"><label for="nama">Nama</label><input type="text" id="nama" required></div>
+                        <div class="form-group"><label for="nik">NIK</label><input type="text" id="nik"></div>
+                        <div class="form-group"><label for="no_rm">No. RM</label><input type="text" id="no_rm"></div>
+
+                        <div class="form-group"><label for="tempat_lahir">Tempat Lahir</label><input type="text" id="tempat_lahir"></div>
+                        <div class="form-group"><label for="tgl_lahir">Tanggal Lahir</label><input type="text" id="tgl_lahir" placeholder="DD/MM/YYYY"></div>
+                        <div class="form-group"><label for="umur">Umur (Tahun)</label><input type="number" id="umur" readonly class="bg-slate-200"></div>
+                        
+                        <div class="form-group md:col-span-2"><label for="alamat">Alamat Rumah</label><textarea id="alamat" rows="2"></textarea></div>
+                        <div class="form-group"><label for="no_hp">No. telp/HP</label><input type="tel" id="no_hp"></div>
+                        
+                        <div class="form-group"><label for="jenis_kelamin">Jenis Kelamin</label><select id="jenis_kelamin"><option value="" disabled selected>Pilih Jawaban...</option><option value="L">Laki-laki</option><option value="P">Perempuan</option></select></div>
+                        <div class="form-group"><label for="tanggal">Tanggal Konseling</label><input type="text" id="tanggal" placeholder="DD/MM/YYYY" required></div>
+                    </div>
+                </section>
+
+                <!-- I. Status Perilaku Merokok -->
+                <section class="form-section">
+                    <h3>I. Status Perilaku Merokok</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div class="form-group"><label for="usia_mulai_merokok">Usia Mulai Merokok (tahun)</label><input type="number" id="usia_mulai_merokok"></div>
+                        <div class="form-group"><label for="lama_merokok">Lama Merokok (tahun)</label><input type="number" id="lama_merokok"></div>
+                        <div class="form-group"><label for="jumlah_rokok_hari">Jumlah Rokok/hari</label><input type="number" id="jumlah_rokok_hari"></div>
+                        <div class="form-group"><label for="alasan_mulai_merokok">Alasan Mulai Merokok</label><input type="text" id="alasan_mulai_merokok"></div>
+                        <div class="form-group"><label for="keluarga_merokok">Anggota Keluarga yg Merokok</label><select id="keluarga_merokok"><option value="" disabled selected>Pilih Jawaban...</option><option value="tidak">Tidak Ada</option><option value="ada">Ada</option></select></div>
+                        <div class="form-group"><label for="skor_fagerstrom">Skor Fagerström</label><div class="flex"><input type="number" id="skor_fagerstrom" class="rounded-r-none"><button type="button" id="show-fagerstrom-btn" class="bg-sky-600 text-white px-3 rounded-r-md hover:bg-sky-700">Ukur</button></div></div>
+                        <div class="form-group"><label for="berat_badan">Berat Badan (kg)</label><input type="number" step="0.1" id="berat_badan"></div>
+                        <div class="form-group"><label for="tinggi_badan">Tinggi Badan (cm)</label><input type="number" id="tinggi_badan"></div>
+                        <div class="form-group"><label for="imt">IMT</label><input type="text" id="imt" readonly class="bg-slate-200"></div>
+                        <div class="form-group"><label for="tensi_darah">Tensi Darah (mmHg)</label><input type="text" id="tensi_darah" placeholder="cth: 120/80"></div>
+                        <div class="form-group"><label for="kadar_co">Kadar CO (ppm)</label><input type="number" id="kadar_co"></div>
+                    </div>
+                </section>
+                
+                <!-- II. Riwayat Berhenti Merokok Sebelumnya -->
+                <section class="form-section">
+                    <h3>II. Riwayat Berhenti Merokok Sebelumnya</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div class="form-group"><label for="jumlah_usaha_berhenti">Jumlah Usaha Berhenti</label><input type="number" id="jumlah_usaha_berhenti"></div>
+                        <div class="form-group"><label for="kapan_usaha_terakhir">Kapan Usaha Terakhir?</label><input type="text" id="kapan_usaha_terakhir"></div>
+                        <div class="form-group"><label for="cara_berhenti">Cara Berhenti yg Digunakan</label><input type="text" id="cara_berhenti"></div>
+                        <div class="form-group"><label for="jumlah_hari_bebas_rokok">Jumlah Hari Bebas Rokok</label><input type="number" id="jumlah_hari_bebas_rokok"></div>
+                        <div class="form-group"><label for="masalah_dihadapi">Masalah yang Dihadapi</label><input type="text" id="masalah_dihadapi"></div>
+                        <div class="form-group"><label for="alasan_merokok_kembali">Alasan Mulai Merokok Kembali</label><input type="text" id="alasan_merokok_kembali"></div>
+                    </div>
+                </section>
+
+                <!-- III. Tingkat Perilaku -->
+                <section class="form-section">
+                    <h3>III. Tingkat Perilaku</h3>
+                     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+                        <div class="form-group">
+                            <label for="tingkat_kesiapan">Tingkat Kesiapan</label>
+                            <select id="tingkat_kesiapan">
+                                <option value="" disabled selected>Pilih Jawaban...</option>
+                                <option>Sedang memutuskan</option>
+                                <option>Kebulatan niat</option>
+                                <option>Persiapan</option>
+                                <option>Aksi</option>
+                                <option>Pemeliharaan</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="tingkat_motivasi">Tingkat Motivasi <span class="font-normal text-slate-500">(0: Tidak Termotivasi, 10: Sangat Termotivasi)</span></label>
+                            <div class="flex items-center space-x-3 mt-2">
+                                <input type="range" id="tingkat_motivasi" min="0" max="10" value="5" class="w-full">
+                                <span id="motivasi-value" class="font-bold text-lg text-teal-700 w-12 text-center p-1 bg-slate-200 rounded-md">5</span>
+                            </div>
+                        </div>
+                         <div class="form-group col-span-2">
+                            <label for="alasan_ingin_berhenti">Alasan Ingin Berhenti</label>
+                            <textarea id="alasan_ingin_berhenti" rows="2"></textarea>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- IV. Intervensi Tanggal Berhenti merokok -->
+                <section class="form-section">
+                    <h3>IV. Intervensi Tanggal Berhenti Merokok</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+                        <div class="form-group">
+                            <label for="metode_berhenti">Metode Berhenti</label>
+                            <select id="metode_berhenti">
+                                <option value="" disabled selected>Pilih Jawaban...</option>
+                                <option>Langsung berhenti</option>
+                                <option>Bertahap mengurangi jumlah</option>
+                                <option>Penundaan jam merokok</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="pilihan_terapi">Pilihan Terapi</label>
+                            <select id="pilihan_terapi">
+                                <option value="" disabled selected>Pilih Jawaban...</option>
+                                <option>Konseling</option>
+                                <option>Farmakoterapi</option>
+                                <option>Kombinasi</option>
+                            </select>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Pertemuan Berikutnya & Tindak Lanjut -->
+                <section class="form-section">
+                     <h3>V. Pertemuan Berikutnya & Tindak Lanjut</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                         <div class="form-group"><label for="nilai_keberhasilan">Nilai Keberhasilan</label><textarea id="nilai_keberhasilan" rows="3"></textarea></div>
+                         <div class="form-group"><label for="tindak_lanjut">Tindak Lanjut</label><select id="tindak_lanjut"><option value="" disabled selected>Pilih Jawaban...</option><option>Berhasil Berhenti Merokok</option><option>Kembali Merokok</option><option>Dirujuk ke Puskesmas</option><option>Proses Berjalan</option></select></div>
+                    </div>
+                </section>
+
+                <div class="mt-8 text-right">
+                    <button type="submit" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300">
+                        Simpan Data Klien
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Kuesioner Fagerstrom -->
+    <div id="fagerstrom-modal" class="modal">
+        <div class="modal-content">
+            <span id="close-fagerstrom-btn" class="close-btn">&times;</span>
+            <h2 class="text-2xl font-bold text-teal-700 mb-6">Kuesioner Adiksi Nikotin Fagerström</h2>
+            <form id="fagerstrom-form">
+                <div class="space-y-4">
+                    <div>
+                        <label class="font-semibold">1. Berapa banyak rokok yang Anda hisap dalam satu hari?</label>
+                        <div><label><input type="radio" name="q1" value="0" required> 1-10</label></div>
+                        <div><label><input type="radio" name="q1" value="1"> 11-20</label></div>
+                        <div><label><input type="radio" name="q1" value="2"> 21-30</label></div>
+                        <div><label><input type="radio" name="q1" value="3"> 31 atau lebih</label></div>
+                    </div>
+                    <div>
+                        <label class="font-semibold">2. Seberapa cepat Anda menyalakan rokok pertama setelah terjaga?</label>
+                        <div><label><input type="radio" name="q2" value="3" required> Dalam 5 menit</label></div>
+                        <div><label><input type="radio" name="q2" value="2"> 6 hingga 30 menit</label></div>
+                        <div><label><input type="radio" name="q2" value="1"> 31 hingga 60 menit</label></div>
+                        <div><label><input type="radio" name="q2" value="0"> Setelah 60 menit</label></div>
+                    </div>
+                    <div>
+                        <label class="font-semibold">3. Rokok mana yang paling Anda tidak relakan untuk dihentikan?</label>
+                         <div><label><input type="radio" name="q3" value="1" required> Rokok pertama pada pagi hari</label></div>
+                         <div><label><input type="radio" name="q3" value="0"> Lainnya</label></div>
+                    </div>
+                    <div>
+                        <label class="font-semibold">4. Apakah Anda merokok lebih banyak dalam dua jam pertama hari Anda?</label>
+                        <div><label><input type="radio" name="q4" value="1" required> Ya</label></div>
+                        <div><label><input ubiquity="265" type="radio" name="q4" value="0"> Tidak</label></div>
+                    </div>
+                    <div>
+                         <label class="font-semibold">5. Apakah Anda kesulitan menahan merokok di tempat yang dilarang?</label>
+                         <div><label><input type="radio" name="q5" value="1" required> Ya</label></div>
+                         <div><label><input type="radio" name="q5" value="0"> Tidak</label></div>
+                    </div>
+                    <div>
+                         <label class="font-semibold">6. Apakah Anda masih merokok ketika sakit berat?</label>
+                         <div><label><input type="radio" name="q6" value="1" required> Ya</label></div>
+                         <div><label><input type="radio" name="q6" value="0"> Tidak</label></div>
+                    </div>
+                </div>
+                <button type="submit" class="mt-6 w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-lg">
+                    Hitung & Simpan Skor
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Modal Konfirmasi Hapus -->
+    <div id="delete-confirm-modal" class="modal">
+        <div class="modal-content">
+            <h2 class="text-2xl font-bold text-red-700 mb-4">Konfirmasi Hapus</h2>
+            <p id="delete-confirm-text" class="mb-6 text-slate-600">Apakah Anda yakin ingin menghapus data klien ini? Tindakan ini tidak dapat dibatalkan.</p>
+            <div class="flex justify-end space-x-4">
+                <button id="cancel-delete-btn" class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-2 px-4 rounded-lg">Batal</button>
+                <button id="confirm-delete-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">Ya, Hapus</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- Referensi Elemen DOM ---
+        const clientListScreen = document.getElementById('client-list-screen');
+        const clientDetailScreen = document.getElementById('client-detail-screen');
+        const clientListContainer = document.getElementById('client-list-container');
+        const clientForm = document.getElementById('client-form');
+        const formTitle = document.getElementById('form-title');
+        const clientIdInput = document.getElementById('client-id');
+        const statusChartCanvas = document.getElementById('client-status-chart');
+        const genderChartCanvas = document.getElementById('client-gender-chart');
+        const totalClientsDisplay = document.getElementById('total-clients-display');
+        const tglLahirInput = document.getElementById('tgl_lahir');
+        const umurInput = document.getElementById('umur');
+        const beratBadanInput = document.getElementById('berat_badan');
+        const tinggiBadanInput = document.getElementById('tinggi_badan');
+        const imtInput = document.getElementById('imt');
+        const tingkatMotivasiInput = document.getElementById('tingkat_motivasi');
+        const motivasiValueSpan = document.getElementById('motivasi-value');
+
+        const addNewClientBtn = document.getElementById('add-new-client-btn');
+        const backToListBtn = document.getElementById('back-to-list-btn');
+
+        const fagerstromModal = document.getElementById('fagerstrom-modal');
+        const showFagerstromBtn = document.getElementById('show-fagerstrom-btn');
+        const closeFagerstromBtn = document.getElementById('close-fagerstrom-btn');
+        const fagerstromForm = document.getElementById('fagerstrom-form');
+        const skorFagerstromInput = document.getElementById('skor_fagerstrom');
+        
+        const deleteConfirmModal = document.getElementById('delete-confirm-modal');
+        const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
+        const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+        
+        let clients = [];
+        let statusChart;
+        let genderChart;
+        let clientIdToDelete = null;
+
+        Chart.register(ChartDataLabels);
+
+        // Initialize date pickers
+        flatpickr("#tgl_lahir", {
+            dateFormat: "d/m/Y",
+            allowInput: true,
+            onChange: function(selectedDates, dateStr, instance) {
+                const isoDate = parseIndonesianDate(dateStr);
+                umurInput.value = calculateAge(isoDate);
+            },
+        });
+        flatpickr("#tanggal", {
+            dateFormat: "d/m/Y",
+            allowInput: true,
+            defaultDate: "today"
+        });
+
+        // --- Fungsi untuk styling placeholder select ---
+        function updateSelectStyles() {
+            clientForm.querySelectorAll('select').forEach(select => {
+                if (select.value === "") {
+                    select.classList.add('placeholder-style');
+                } else {
+                    select.classList.remove('placeholder-style');
+                }
+            });
+        }
+
+        // --- Fungsi Utama ---
+        function initializeApp() {
+            loadClients();
+            renderDashboard();
+            showScreen('list');
+            // Tambahkan event listener ke semua select di form
+            clientForm.querySelectorAll('select').forEach(select => {
+                select.addEventListener('change', updateSelectStyles);
+            });
+        }
+
+        function renderDashboard() {
+            renderClientList();
+            renderTotalClientCount();
+            renderStatusChart();
+            renderGenderChart();
+        }
+
+        function showScreen(screen) {
+            if (screen === 'list') {
+                clientListScreen.style.display = 'block';
+                clientDetailScreen.style.display = 'none';
+                renderDashboard();
+            } else {
+                clientListScreen.style.display = 'none';
+                clientDetailScreen.style.display = 'block';
+            }
+        }
+
+        function loadClients() {
+            clients = JSON.parse(localStorage.getItem('counselingClients')) || [];
+        }
+
+        function saveClients() {
+            localStorage.setItem('counselingClients', JSON.stringify(clients));
+        }
+
+        function calculateAge(dateString) { // expects YYYY-MM-DD
+            if (!dateString) return '';
+            const today = new Date();
+            const birthDate = new Date(dateString);
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const m = today.getMonth() - birthDate.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+            return age >= 0 ? age : '';
+        }
+
+        function formatDateToIndonesian(dateString) { // YYYY-MM-DD -> DD/MM/YYYY
+            if (!dateString || !dateString.includes('-')) return dateString;
+            const parts = dateString.split('-');
+            if (parts.length !== 3) return dateString;
+            const [year, month, day] = parts;
+            return `${day}/${month}/${year}`;
+        }
+
+        function parseIndonesianDate(dateString) { // DD/MM/YYYY -> YYYY-MM-DD
+            if (!dateString || !dateString.includes('/')) return dateString;
+            const parts = dateString.split('/');
+            if (parts.length !== 3) return '';
+            const [day, month, year] = parts;
+            if (day && month && year && year.length === 4) {
+                return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+            }
+            return ''; // Return empty if format is incorrect
+        }
+        
+        function calculateIMT() {
+            const weight = parseFloat(beratBadanInput.value);
+            const height = parseFloat(tinggiBadanInput.value);
+
+            if (weight > 0 && height > 0) {
+                const heightInMeters = height / 100;
+                const imt = weight / (heightInMeters * heightInMeters);
+                imtInput.value = imt.toFixed(2); // Tampilkan 2 angka desimal
+            } else {
+                imtInput.value = '';
+            }
+        }
+        
+        // --- Render Tampilan ---
+        function renderClientList() {
+            clientListContainer.innerHTML = '';
+            if (clients.length === 0) {
+                clientListContainer.innerHTML = `<p class="text-center text-slate-500 italic py-4">Belum ada data klien.</p>`;
+                return;
+            }
+            clients.forEach(client => {
+                const clientEl = document.createElement('div');
+                clientEl.className = 'bg-slate-50 p-3 rounded-lg flex justify-between items-center';
+                const clientAge = client.tgl_lahir ? `${calculateAge(client.tgl_lahir)} tahun` : 'Umur T/A';
+                clientEl.innerHTML = `
+                    <div>
+                        <p class="font-semibold text-slate-800">${client.nama || 'Tanpa Nama'}</p>
+                        <p class="text-sm text-slate-500">Umur: ${clientAge}</p>
+                    </div>
+                    <div class="space-x-2">
+                        <button class="edit-client-btn text-blue-600 hover:text-blue-800" data-id="${client.id}">Ubah</button>
+                        <button class="delete-client-btn text-red-600 hover:text-red-800" data-id="${client.id}">Hapus</button>
+                    </div>
+                `;
+                clientListContainer.appendChild(clientEl);
+            });
+        }
+
+        function renderTotalClientCount() {
+            totalClientsDisplay.textContent = clients.length;
+        }
+
+        function renderStatusChart() {
+            if (statusChart) {
+                statusChart.destroy();
+            }
+            
+            const statusCounts = clients.reduce((acc, client) => {
+                const status = client.tindak_lanjut || 'Proses Berjalan';
+                acc[status] = (acc[status] || 0) + 1;
+                return acc;
+            }, {});
+
+            const ctx = statusChartCanvas.getContext('2d');
+            statusChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(statusCounts),
+                    datasets: [{
+                        label: 'Status Klien',
+                        data: Object.values(statusCounts),
+                        backgroundColor: [
+                            '#10b981', // green
+                            '#ef4444', // red
+                            '#3b82f6', // blue
+                            '#f59e0b'  // amber
+                        ],
+                        hoverOffset: 4
+                    }]
+                },
+                 options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'top' },
+                        title: { display: false },
+                        datalabels: {
+                            formatter: (value, ctx) => {
+                                if (value === 0) return '';
+                                let sum = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                if (sum === 0) return '';
+                                let percentage = ((value / sum) * 100).toFixed(1) + '%';
+                                return `${value}\n(${percentage})`;
+                            },
+                            color: '#fff',
+                            textAlign: 'center',
+                            font: {
+                                weight: 'bold'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderGenderChart() {
+            if (genderChart) {
+                genderChart.destroy();
+            }
+            
+            const genderCounts = clients.reduce((acc, client) => {
+                const gender = client.jenis_kelamin;
+                if (gender === 'L') {
+                    acc['Laki-laki'] = (acc['Laki-laki'] || 0) + 1;
+                } else if (gender === 'P') {
+                    acc['Perempuan'] = (acc['Perempuan'] || 0) + 1;
+                }
+                return acc;
+            }, { 'Laki-laki': 0, 'Perempuan': 0 });
+            
+            const ctx = genderChartCanvas.getContext('2d');
+            genderChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(genderCounts),
+                    datasets: [{
+                        label: 'Jenis Kelamin',
+                        data: Object.values(genderCounts),
+                        backgroundColor: [
+                            '#3b82f6', // blue
+                            '#ec4899'  // pink
+                        ],
+                        hoverOffset: 4
+                    }]
+                },
+                 options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'top' },
+                        title: { display: false },
+                        datalabels: {
+                           formatter: (value, ctx) => {
+                                if (value === 0) return '';
+                                let sum = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                if (sum === 0) return '';
+                                let percentage = ((value / sum) * 100).toFixed(1) + '%';
+                                return `${value}\n(${percentage})`;
+                            },
+                            color: '#fff',
+                            textAlign: 'center',
+                            font: {
+                                weight: 'bold'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // --- Fungsi Form Klien ---
+        function showClientForm(clientId = null) {
+            clientForm.reset();
+            motivasiValueSpan.textContent = '5';
+            
+            if (clientId) {
+                const client = clients.find(c => c.id === clientId);
+                if (client) {
+                    formTitle.textContent = 'Ubah Data Klien';
+                    populateForm(client);
+                }
+            } else {
+                formTitle.textContent = 'Tambah Klien Baru';
+                clientIdInput.value = '';
+            }
+            updateSelectStyles(); // Terapkan style setelah reset/populate
+            showScreen('detail');
+        }
+        
+        function populateForm(client) {
+            Object.keys(client).forEach(key => {
+                const input = document.getElementById(key);
+                if (input) {
+                    if (key === 'tgl_lahir' || key === 'tanggal') {
+                        if(input._flatpickr) {
+                            input._flatpickr.setDate(parseIndonesianDate(client[key]), true);
+                        } else {
+                           input.value = formatDateToIndonesian(client[key]);
+                        }
+                    } else {
+                        input.value = client[key];
+                    }
+                }
+            });
+            
+            if (client.tgl_lahir) {
+                 const isoDate = parseIndonesianDate(document.getElementById('tgl_lahir').value);
+                 umurInput.value = calculateAge(isoDate);
+            } else {
+                 umurInput.value = '';
+            }
+            motivasiValueSpan.textContent = tingkatMotivasiInput.value || '5';
+            calculateIMT();
+            updateSelectStyles(); // Terapkan style setelah nilai diisi
+        }
+        
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const id = clientIdInput.value;
+            const clientData = {};
+            
+            const inputs = clientForm.querySelectorAll('input, select, textarea');
+            inputs.forEach(input => {
+                if(input.id) {
+                     if (input.id === 'tgl_lahir' || input.id === 'tanggal') {
+                        clientData[input.id] = parseIndonesianDate(input.value);
+                    } else {
+                        clientData[input.id] = input.value;
+                    }
+                }
+            });
+            
+            if (id) {
+                const index = clients.findIndex(c => c.id === id);
+                clients[index] = { ...clients[index], ...clientData };
+            } else {
+                clientData.id = Date.now().toString();
+                clients.push(clientData);
+            }
+            
+            saveClients();
+            showScreen('list');
+        }
+        
+        function deleteClient(id) {
+            clientIdToDelete = id;
+            deleteConfirmModal.style.display = 'flex';
+        }
+        
+        function handleFagerstromSubmit(e) {
+            e.preventDefault();
+            let score = 0;
+            const formData = new FormData(fagerstromForm);
+            for (let value of formData.values()) {
+                score += parseInt(value, 10);
+            }
+            skorFagerstromInput.value = score;
+            fagerstromModal.style.display = 'none';
+        }
+
+        // --- Event Listeners ---
+        addNewClientBtn.addEventListener('click', () => showClientForm());
+        backToListBtn.addEventListener('click', () => showScreen('list'));
+        clientForm.addEventListener('submit', handleFormSubmit);
+        
+        beratBadanInput.addEventListener('input', calculateIMT);
+        tinggiBadanInput.addEventListener('input', calculateIMT);
+
+        tingkatMotivasiInput.addEventListener('input', () => {
+            motivasiValueSpan.textContent = tingkatMotivasiInput.value;
+        });
+
+        clientListContainer.addEventListener('click', (e) => {
+            if (e.target.classList.contains('edit-client-btn')) {
+                showClientForm(e.target.dataset.id);
+            }
+            if (e.target.classList.contains('delete-client-btn')) {
+                deleteClient(e.target.dataset.id);
+            }
+        });
+        
+        // Listeners Modal Hapus
+        cancelDeleteBtn.addEventListener('click', () => {
+            deleteConfirmModal.style.display = 'none';
+            clientIdToDelete = null;
+        });
+        
+        confirmDeleteBtn.addEventListener('click', () => {
+            if (clientIdToDelete) {
+                clients = clients.filter(c => c.id !== clientIdToDelete);
+                saveClients();
+                showScreen('list');
+            }
+            deleteConfirmModal.style.display = 'none';
+            clientIdToDelete = null;
+        });
+
+        // Listeners Modal Fagerstrom
+        showFagerstromBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            fagerstromForm.reset();
+            fagerstromModal.style.display = 'flex';
+        });
+        closeFagerstromBtn.addEventListener('click', () => {
+            fagerstromModal.style.display = 'none';
+        });
+        fagerstromForm.addEventListener('submit', handleFagerstromSubmit);
+        
+        // Listener klik di luar modal untuk menutupnya
+        window.addEventListener('click', (event) => {
+            if (event.target == fagerstromModal) {
+                fagerstromModal.style.display = 'none';
+            }
+            if (event.target == deleteConfirmModal) {
+                deleteConfirmModal.style.display = 'none';
+                clientIdToDelete = null;
+            }
+        });
+        
+        initializeApp();
+    });
+    </script>
+</body>
+</html>
+
+
