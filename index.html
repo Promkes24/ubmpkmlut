@@ -136,19 +136,58 @@
             height: 100vh;
         }
         
+        /* New, more robust print styles */
         @media print {
             body * {
                 visibility: hidden;
             }
-            #report-content-print,
-            #report-content-print * {
+
+            #report-content, #report-content * {
                 visibility: visible;
             }
-            #report-content-print {
+
+            #report-content {
                 position: absolute;
                 left: 0;
                 top: 0;
                 width: 100%;
+                margin: 0;
+                padding: 1.5rem;
+                border: none !important;
+                box-shadow: none !important;
+            }
+
+            #report-content h2 {
+                text-align: center;
+                font-size: 16pt;
+                font-weight: 700;
+                margin-bottom: 8px;
+                color: black;
+            }
+
+            #report-content p {
+                text-align: center;
+                font-size: 11pt;
+                margin-bottom: 24px;
+                color: black;
+            }
+
+            #report-content table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 10pt;
+            }
+
+            #report-content th,
+            #report-content td {
+                border: 1px solid #333;
+                padding: 6px;
+                text-align: left;
+                color: black;
+            }
+
+            #report-content thead {
+                background-color: #e5e5e5 !important; /* Important to override tailwind */
             }
         }
     </style>
@@ -314,8 +353,6 @@
                 <div id="report-content" class="bg-white p-8 rounded-xl shadow-lg">
                     <p class="text-center text-slate-500">Pilih bulan dan tahun untuk menampilkan laporan.</p>
                 </div>
-                <!-- Printable area -->
-                <div id="report-content-print" class="hidden"></div>
             </div>
 
             <!-- Layar Admin -->
@@ -1306,7 +1343,7 @@
                     return clientYear == year && clientMonth == month;
                 });
 
-                let reportHTML = `<div id="report-content-print">
+                let reportHTML = `
                 <h2 class="text-xl font-bold text-center mb-2">Laporan Konseling UBM</h2>
                 <p class="text-center text-slate-600 mb-6">Periode Pendaftaran Awal: ${monthName} ${year}</p>`;
 
@@ -1341,24 +1378,11 @@
                     reportHTML += `</tbody></table></div>`;
                     printReportBtn.classList.remove('hidden');
                 }
-                reportHTML += `</div>`;
                 reportContent.innerHTML = reportHTML;
             }
 
             function printReport() {
-                const printContent = document.getElementById('report-content-print').innerHTML;
-                const printWindow = window.open('', '', 'height=600,width=800');
-                printWindow.document.write('<html><head><title>Laporan Konseling UBM</title>');
-                printWindow.document.write('<style>body { font-family: Inter, sans-serif; padding: 1rem; } h2 { text-align: center; font-size: 1.25rem; font-weight: bold; margin-bottom: 0.5rem; } p { text-align: center; color: #475569; margin-bottom: 1.5rem; } table { width: 100%; border-collapse: collapse; font-size: 0.8rem;} th, td { border: 1px solid #ddd; padding: 6px; text-align: left;} thead { background-color: #f2f2f2; }</style>');
-                printWindow.document.write('</head><body>');
-                printWindow.document.write(printContent);
-                printWindow.document.write('</body></html>');
-                printWindow.document.close();
-                printWindow.focus();
-                setTimeout(() => {
-                    printWindow.print();
-                    printWindow.close();
-                }, 250);
+                window.print();
             }
 
             function exportToExcel() {
