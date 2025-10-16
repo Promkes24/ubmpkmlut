@@ -136,19 +136,94 @@
             height: 100vh;
         }
         
+        /* Updated print styles for professional look */
         @media print {
+            @page {
+                margin: 2cm;
+            }
+
+            body {
+                font-family: 'Times New Roman', Times, serif;
+            }
+
             body * {
                 visibility: hidden;
+                background: transparent !important;
+                color: black !important;
+                box-shadow: none !important;
+                text-shadow: none !important;
             }
-            #report-content-print,
-            #report-content-print * {
+
+            #report-content, #report-content * {
                 visibility: visible;
             }
-            #report-content-print {
-                position: absolute;
-                left: 0;
-                top: 0;
+
+            #report-content {
+                position: static;
+                width: auto;
+                margin: 0;
+                padding: 0;
+                border: none !important;
+            }
+            
+            .print-header {
+                text-align: center;
+                margin-bottom: 2rem;
+                border-bottom: 2px solid black;
+                padding-bottom: 1rem;
+            }
+
+            .print-header h1 {
+                font-size: 18pt;
+                font-weight: bold;
+                margin: 0;
+            }
+    
+            .print-header p {
+                font-size: 12pt;
+                margin: 4px 0 0 0;
+            }
+
+            #report-content h2 {
+                text-align: center;
+                font-size: 14pt;
+                font-weight: 700;
+                margin-bottom: 8px;
+            }
+
+            #report-content p.report-period {
+                text-align: center;
+                font-size: 11pt;
+                margin-bottom: 24px;
+            }
+
+            #report-content table {
                 width: 100%;
+                border-collapse: collapse;
+                font-size: 10pt;
+            }
+
+            #report-content th,
+            #report-content td {
+                border: 1px solid #333;
+                padding: 8px;
+                text-align: left;
+            }
+
+            #report-content th {
+                font-weight: bold;
+            }
+            
+            #report-content thead {
+                background-color: #e5e5e5 !important;
+            }
+
+            #report-content tbody tr:nth-child(even) {
+                background-color: #f2f2f2 !important;
+            }
+
+            #report-content tr {
+                page-break-inside: avoid;
             }
         }
     </style>
@@ -314,8 +389,6 @@
                 <div id="report-content" class="bg-white p-8 rounded-xl shadow-lg">
                     <p class="text-center text-slate-500">Pilih bulan dan tahun untuk menampilkan laporan.</p>
                 </div>
-                <!-- Printable area -->
-                <div id="report-content-print" class="hidden"></div>
             </div>
 
             <!-- Layar Admin -->
@@ -1306,59 +1379,50 @@
                     return clientYear == year && clientMonth == month;
                 });
 
-                let reportHTML = `<div id="report-content-print">
-                <h2 class="text-xl font-bold text-center mb-2">Laporan Konseling UBM</h2>
-                <p class="text-center text-slate-600 mb-6">Periode Pendaftaran Awal: ${monthName} ${year}</p>`;
+                let reportHTML = `
+                <div class="print-header">
+                    <h1>PUSKESMAS LANDASAN ULIN TIMUR</h1>
+                    <p>Jl. A. Yani Km. 24, Landasan Ulin Tim., Kec. Landasan Ulin, Kota Banjar Baru</p>
+                </div>
+                <h2>Laporan Konseling UBM</h2>
+                <p class="report-period">Periode Pendaftaran Awal: ${monthName} ${year}</p>`;
 
                 if (filteredClients.length === 0) {
                     reportHTML += `<p class="text-center text-slate-500">Tidak ada data untuk periode yang dipilih.</p>`;
                     printReportBtn.classList.add('hidden');
                 } else {
-                    reportHTML += `<div class="overflow-x-auto"><table class="w-full text-sm text-left whitespace-nowrap">
-                    <thead class="bg-slate-100">
+                    reportHTML += `<div class="overflow-x-auto"><table>
+                    <thead>
                         <tr>
-                            <th class="p-3 font-semibold">No.</th>
-                            <th class="p-3 font-semibold">Nama</th>
-                            <th class="p-3 font-semibold">Umur</th>
-                            <th class="p-3 font-semibold">Jenis Kelamin</th>
-                            <th class="p-3 font-semibold">Tgl Konseling Awal</th>
-                            <th class="p-3 font-semibold">Status Terkini</th>
+                            <th>No.</th>
+                            <th>Nama</th>
+                            <th>Umur</th>
+                            <th>Jenis Kelamin</th>
+                            <th>Tgl Konseling Awal</th>
+                            <th>Status Terkini</th>
                         </tr>
                     </thead>
                     <tbody>`;
                     filteredClients.forEach((client, index) => {
                         const clientAge = client.tgl_lahir ? `${calculateAge(client.tgl_lahir)}` : 'T/A';
                         reportHTML += `
-                        <tr class="border-b">
-                            <td class="p-3">${index + 1}</td>
-                            <td class="p-3">${client.nama || '-'}</td>
-                            <td class="p-3">${clientAge}</td>
-                            <td class="p-3">${client.jenis_kelamin === 'L' ? 'Laki-laki' : (client.jenis_kelamin === 'P' ? 'Perempuan' : '-')}</td>
-                            <td class="p-3">${formatDateToIndonesian(client.tanggal) || '-'}</td>
-                            <td class="p-3">${getLatestStatus(client)}</td>
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${client.nama || '-'}</td>
+                            <td>${clientAge}</td>
+                            <td>${client.jenis_kelamin === 'L' ? 'Laki-laki' : (client.jenis_kelamin === 'P' ? 'Perempuan' : '-')}</td>
+                            <td>${formatDateToIndonesian(client.tanggal) || '-'}</td>
+                            <td>${getLatestStatus(client)}</td>
                         </tr>`;
                     });
                     reportHTML += `</tbody></table></div>`;
                     printReportBtn.classList.remove('hidden');
                 }
-                reportHTML += `</div>`;
                 reportContent.innerHTML = reportHTML;
             }
 
             function printReport() {
-                const printContent = document.getElementById('report-content-print').innerHTML;
-                const printWindow = window.open('', '', 'height=600,width=800');
-                printWindow.document.write('<html><head><title>Laporan Konseling UBM</title>');
-                printWindow.document.write('<style>body { font-family: Inter, sans-serif; padding: 1rem; } h2 { text-align: center; font-size: 1.25rem; font-weight: bold; margin-bottom: 0.5rem; } p { text-align: center; color: #475569; margin-bottom: 1.5rem; } table { width: 100%; border-collapse: collapse; font-size: 0.8rem;} th, td { border: 1px solid #ddd; padding: 6px; text-align: left;} thead { background-color: #f2f2f2; }</style>');
-                printWindow.document.write('</head><body>');
-                printWindow.document.write(printContent);
-                printWindow.document.write('</body></html>');
-                printWindow.document.close();
-                printWindow.focus();
-                setTimeout(() => {
-                    printWindow.print();
-                    printWindow.close();
-                }, 250);
+                window.print();
             }
 
             function exportToExcel() {
