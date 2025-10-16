@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,20 +10,38 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <!-- jsPDF and SheetJS for export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
         }
+
+        .font-montserrat {
+            font-family: 'Montserrat', sans-serif;
+        }
+
         .fade-in {
             animation: fadeIn 0.5s ease-in-out;
         }
+
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
+
         .modal {
             display: none;
             position: fixed;
@@ -32,10 +51,11 @@
             width: 100%;
             height: 100%;
             overflow: auto;
-            background-color: rgba(0,0,0,0.6);
+            background-color: rgba(0, 0, 0, 0.6);
             align-items: center;
             justify-content: center;
         }
+
         .modal-content {
             background-color: #fefefe;
             margin: auto;
@@ -45,6 +65,7 @@
             max-width: 500px;
             animation: fadeIn 0.3s;
         }
+
         .close-btn {
             color: #aaa;
             float: right;
@@ -52,6 +73,7 @@
             font-weight: bold;
             cursor: pointer;
         }
+
         .form-section {
             background-color: #f8fafc;
             border: 1px solid #e2e8f0;
@@ -59,6 +81,7 @@
             padding: 1.5rem;
             margin-bottom: 1.5rem;
         }
+
         .form-section h3 {
             font-size: 1.125rem;
             font-weight: 600;
@@ -67,9 +90,11 @@
             border-bottom: 1px solid #cbd5e1;
             padding-bottom: 0.5rem;
         }
+
         .form-group {
             margin-bottom: 1rem;
         }
+
         .form-group label {
             display: block;
             font-size: 0.875rem;
@@ -77,53 +102,147 @@
             color: #475569;
             margin-bottom: 0.25rem;
         }
-        .form-group input, .form-group select, .form-group textarea {
-             width: 100%;
-             padding: 0.5rem 0.75rem;
-             border: 1px solid #cbd5e1;
-             border-radius: 0.375rem;
-             font-size: 0.875rem;
-             box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
         }
-        /* Style untuk placeholder dropdown */
+
         select {
-            color: #1e293b; /* Warna teks default */
+            color: #1e293b;
         }
+
         select.placeholder-style {
-            color: #9ca3af; /* Warna teks redup untuk placeholder */
+            color: #9ca3af;
+        }
+
+        select option {
+            color: #1e293b;
+        }
+
+        #app-container {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        main {
+            height: 100vh;
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #report-content-print,
+            #report-content-print * {
+                visibility: visible;
+            }
+            #report-content-print {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
         }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800 p-4 md:p-8">
 
-    <div class="w-full max-w-6xl mx-auto">
-        <!-- Layar Daftar Klien (Dashboard) -->
-        <div id="client-list-screen" class="fade-in">
-            <header class="text-center mb-8">
-                <h1 class="text-4xl font-bold text-teal-700">Dasbor Konseling UBM</h1>
-                <p class="text-slate-600 mt-2">Manajemen Klien Upaya Berhenti Merokok</p>
-                <p class="text-slate-500 mt-1 font-semibold">Puskesmas Landasan Ulin Timur</p>
-            </header>
+<body class="bg-slate-100 text-slate-800">
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-xl font-bold text-teal-700">Daftar Klien</h2>
-                        <button id="add-new-client-btn" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
-                            + Tambah Klien Baru
-                        </button>
-                    </div>
-                    <div id="client-list-container" class="space-y-3 max-h-[30rem] overflow-y-auto pr-2">
-                        <!-- Daftar Klien akan di-render oleh JS -->
+    <!-- Layar Login -->
+    <div id="login-screen" class="w-full max-w-sm mx-auto p-4 fade-in flex items-center justify-center min-h-screen">
+        <div class="bg-white p-8 rounded-xl shadow-lg w-full">
+            <h1 class="text-3xl font-bold text-teal-700 text-center mb-2">Selamat Datang</h1>
+            <p class="text-slate-700 text-center mt-2 mb-8 text-xl font-montserrat tracking-wide">di Aplikasi Konseling UBM</p>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="username">Nama Pengguna</label>
+                    <div class="mt-1 flex items-center border border-slate-300 rounded-md bg-white shadow-sm focus-within:border-teal-500 focus-within:ring-1 focus-within:ring-teal-500">
+                        <span class="pl-3 pr-2 text-slate-400">
+                           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                              <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                           </svg>
+                        </span>
+                        <input type="text" id="username" required class="w-full h-full p-2 border-none focus:ring-0 rounded-r-md">
                     </div>
                 </div>
-                 <div class="space-y-6">
-                    <div class="bg-white p-6 rounded-xl shadow-lg text-center">
+                <div class="form-group">
+                    <label for="password">Kata Sandi</label>
+                    <div class="mt-1 flex items-center border border-slate-300 rounded-md bg-white shadow-sm focus-within:border-teal-500 focus-within:ring-1 focus-within:ring-teal-500">
+                        <span class="pl-3 pr-2 text-slate-400">
+                           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                              <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                           </svg>
+                        </span>
+                        <input type="password" id="password" required class="w-full h-full p-2 border-none focus:ring-0 rounded-r-md">
+                    </div>
+                </div>
+                <p id="login-error" class="text-red-500 text-sm text-center mb-4 hidden"></p>
+                <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 mt-4">
+                    Masuk
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Kontainer Aplikasi Utama -->
+    <div id="app-container" class="hidden">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-64 bg-gradient-to-b from-slate-800 to-slate-900 shadow-2xl flex flex-col p-4 flex-shrink-0">
+            <div id="sidebar-header" class="mb-4 pt-4">
+                <div class="text-center">
+                    <h2 class="font-bold text-white text-lg" style="text-shadow: 1px 1px 3px rgba(0,0,0,0.4);">Konseling UBM</h2>
+                    <p class="text-sm text-slate-400" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">Puskesmas Landasan Ulin Timur</p>
+                </div>
+            </div>
+            <hr class="border-slate-700 mb-4">
+            <nav id="sidebar-nav" class="flex-1 space-y-2">
+                <a href="#" id="nav-dashboard" class="flex items-center space-x-3 p-2 rounded-lg transition-all duration-200 transform hover:shadow-lg hover:-translate-y-px">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" id="nav-data-clients" class="flex items-center space-x-3 p-2 rounded-lg transition-all duration-200 transform hover:shadow-lg hover:-translate-y-px">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                    <span>Data Klien</span>
+                </a>
+                <a href="#" id="nav-laporan" class="flex items-center space-x-3 p-2 rounded-lg transition-all duration-200 transform hover:shadow-lg hover:-translate-y-px">
+                    <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" /></svg>
+                    <span>Laporan</span>
+                </a>
+                <a href="#" id="nav-admin" class="flex items-center space-x-3 p-2 rounded-lg transition-all duration-200 transform hidden hover:shadow-lg hover:-translate-y-px">
+                     <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                    </svg>
+                    <span>Admin</span>
+                </a>
+            </nav>
+            <div id="sidebar-footer" class="mt-auto">
+                <button id="logout-btn" class="w-full flex items-center justify-center space-x-2 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
+                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    <span>Keluar</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-8 overflow-y-auto relative">
+            <!-- Layar Dasbor -->
+            <div id="dashboard-screen" class="fade-in">
+                <h1 class="text-3xl font-bold text-slate-800 mb-8">Dashboard</h1>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-xl shadow-lg text-center md:col-span-1 lg:col-span-1">
                         <h2 class="text-xl font-bold text-center mb-2 text-teal-700">Jumlah Klien Konseling</h2>
-                        <p id="total-clients-display" class="text-5xl font-bold text-slate-800 mt-2">0</p>
+                        <p id="total-clients-display" class="text-6xl font-bold text-slate-800 mt-4">0</p>
                     </div>
                     <div class="bg-white p-6 rounded-xl shadow-lg">
-                        <h2 class="text-xl font-bold text-center mb-4 text-teal-700">Klien Berdasarkan Status</h2>
+                        <h2 class="text-xl font-bold text-center mb-4 text-teal-700">Klien Berdasarkan Status Terkini</h2>
                         <canvas id="client-status-chart"></canvas>
                     </div>
                     <div class="bg-white p-6 rounded-xl shadow-lg">
@@ -132,139 +251,303 @@
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Layar Detail/Form Klien -->
-        <div id="client-detail-screen" class="hidden fade-in">
-             <header class="flex justify-between items-center mb-8">
-                <h1 id="form-title" class="text-3xl font-bold text-teal-700">Tambah Klien Baru</h1>
-                <button id="back-to-list-btn" class="bg-slate-500 hover:bg-slate-600 text-white font-bold py-2 px-5 rounded-lg transition duration-300">
-                    &larr; Kembali
-                </button>
-            </header>
-
-            <form id="client-form">
-                <input type="hidden" id="client-id">
-                
-                <!-- IDENTITAS -->
-                <section class="form-section">
-                    <h3>Identitas Klien</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div class="form-group"><label for="nama">Nama</label><input type="text" id="nama" required></div>
-                        <div class="form-group"><label for="nik">NIK</label><input type="text" id="nik"></div>
-                        <div class="form-group"><label for="no_rm">No. RM</label><input type="text" id="no_rm"></div>
-
-                        <div class="form-group"><label for="tempat_lahir">Tempat Lahir</label><input type="text" id="tempat_lahir"></div>
-                        <div class="form-group"><label for="tgl_lahir">Tanggal Lahir</label><input type="text" id="tgl_lahir" placeholder="DD/MM/YYYY"></div>
-                        <div class="form-group"><label for="umur">Umur (Tahun)</label><input type="number" id="umur" readonly class="bg-slate-200"></div>
-                        
-                        <div class="form-group md:col-span-2"><label for="alamat">Alamat Rumah</label><textarea id="alamat" rows="2"></textarea></div>
-                        <div class="form-group"><label for="no_hp">No. telp/HP</label><input type="tel" id="no_hp"></div>
-                        
-                        <div class="form-group"><label for="jenis_kelamin">Jenis Kelamin</label><select id="jenis_kelamin"><option value="" disabled selected>Pilih Jawaban...</option><option value="L">Laki-laki</option><option value="P">Perempuan</option></select></div>
-                        <div class="form-group"><label for="tanggal">Tanggal Konseling</label><input type="text" id="tanggal" placeholder="DD/MM/YYYY" required></div>
-                    </div>
-                </section>
-
-                <!-- I. Status Perilaku Merokok -->
-                <section class="form-section">
-                    <h3>I. Status Perilaku Merokok</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <div class="form-group"><label for="usia_mulai_merokok">Usia Mulai Merokok (tahun)</label><input type="number" id="usia_mulai_merokok"></div>
-                        <div class="form-group"><label for="lama_merokok">Lama Merokok (tahun)</label><input type="number" id="lama_merokok"></div>
-                        <div class="form-group"><label for="jumlah_rokok_hari">Jumlah Rokok/hari</label><input type="number" id="jumlah_rokok_hari"></div>
-                        <div class="form-group"><label for="alasan_mulai_merokok">Alasan Mulai Merokok</label><input type="text" id="alasan_mulai_merokok"></div>
-                        <div class="form-group"><label for="keluarga_merokok">Anggota Keluarga yg Merokok</label><select id="keluarga_merokok"><option value="" disabled selected>Pilih Jawaban...</option><option value="tidak">Tidak Ada</option><option value="ada">Ada</option></select></div>
-                        <div class="form-group"><label for="skor_fagerstrom">Skor Fagerström</label><div class="flex"><input type="number" id="skor_fagerstrom" class="rounded-r-none"><button type="button" id="show-fagerstrom-btn" class="bg-sky-600 text-white px-3 rounded-r-md hover:bg-sky-700">Ukur</button></div></div>
-                        <div class="form-group"><label for="berat_badan">Berat Badan (kg)</label><input type="number" step="0.1" id="berat_badan"></div>
-                        <div class="form-group"><label for="tinggi_badan">Tinggi Badan (cm)</label><input type="number" id="tinggi_badan"></div>
-                        <div class="form-group"><label for="imt">IMT</label><input type="text" id="imt" readonly class="bg-slate-200"></div>
-                        <div class="form-group"><label for="tensi_darah">Tensi Darah (mmHg)</label><input type="text" id="tensi_darah" placeholder="cth: 120/80"></div>
-                        <div class="form-group"><label for="kadar_co">Kadar CO (ppm)</label><input type="number" id="kadar_co"></div>
-                    </div>
-                </section>
-                
-                <!-- II. Riwayat Berhenti Merokok Sebelumnya -->
-                <section class="form-section">
-                    <h3>II. Riwayat Berhenti Merokok Sebelumnya</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <div class="form-group"><label for="jumlah_usaha_berhenti">Jumlah Usaha Berhenti</label><input type="number" id="jumlah_usaha_berhenti"></div>
-                        <div class="form-group"><label for="kapan_usaha_terakhir">Kapan Usaha Terakhir?</label><input type="text" id="kapan_usaha_terakhir"></div>
-                        <div class="form-group"><label for="cara_berhenti">Cara Berhenti yg Digunakan</label><input type="text" id="cara_berhenti"></div>
-                        <div class="form-group"><label for="jumlah_hari_bebas_rokok">Jumlah Hari Bebas Rokok</label><input type="number" id="jumlah_hari_bebas_rokok"></div>
-                        <div class="form-group"><label for="masalah_dihadapi">Masalah yang Dihadapi</label><input type="text" id="masalah_dihadapi"></div>
-                        <div class="form-group"><label for="alasan_merokok_kembali">Alasan Mulai Merokok Kembali</label><input type="text" id="alasan_merokok_kembali"></div>
-                    </div>
-                </section>
-
-                <!-- III. Tingkat Perilaku -->
-                <section class="form-section">
-                    <h3>III. Tingkat Perilaku</h3>
-                     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6">
-                        <div class="form-group">
-                            <label for="tingkat_kesiapan">Tingkat Kesiapan</label>
-                            <select id="tingkat_kesiapan">
-                                <option value="" disabled selected>Pilih Jawaban...</option>
-                                <option>Sedang memutuskan</option>
-                                <option>Kebulatan niat</option>
-                                <option>Persiapan</option>
-                                <option>Aksi</option>
-                                <option>Pemeliharaan</option>
-                            </select>
+            <!-- Layar Data Klien -->
+            <div id="client-data-screen" class="hidden fade-in">
+                <div class="flex flex-wrap gap-4 justify-between items-center mb-8">
+                    <h1 class="text-3xl font-bold text-slate-800">Data Klien</h1>
+                    <div class="flex items-center gap-2">
+                        <div class="flex items-center border border-slate-300 rounded-md bg-white shadow-sm focus-within:border-teal-500 focus-within:ring-1 focus-within:ring-teal-500">
+                            <span class="pl-3 pr-2 text-slate-400">
+                               <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            </span>
+                            <input type="text" id="search-input" placeholder="Cari nama klien..." class="w-full h-full p-2 border-none focus:ring-0 rounded-r-md text-sm">
                         </div>
-                        <div class="form-group">
-                            <label for="tingkat_motivasi">Tingkat Motivasi <span class="font-normal text-slate-500">(0: Tidak Termotivasi, 10: Sangat Termotivasi)</span></label>
-                            <div class="flex items-center space-x-3 mt-2">
-                                <input type="range" id="tingkat_motivasi" min="0" max="10" value="5" class="w-full">
-                                <span id="motivasi-value" class="font-bold text-lg text-teal-700 w-12 text-center p-1 bg-slate-200 rounded-md">5</span>
-                            </div>
-                        </div>
-                         <div class="form-group col-span-2">
-                            <label for="alasan_ingin_berhenti">Alasan Ingin Berhenti</label>
-                            <textarea id="alasan_ingin_berhenti" rows="2"></textarea>
-                        </div>
+                        <button id="add-new-client-btn" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-3 text-sm rounded-lg transition duration-300 whitespace-nowrap">
+                            + Tambah Klien
+                        </button>
                     </div>
-                </section>
-                
-                <!-- IV. Intervensi Tanggal Berhenti merokok -->
-                <section class="form-section">
-                    <h3>IV. Intervensi Tanggal Berhenti Merokok</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6">
-                        <div class="form-group">
-                            <label for="metode_berhenti">Metode Berhenti</label>
-                            <select id="metode_berhenti">
-                                <option value="" disabled selected>Pilih Jawaban...</option>
-                                <option>Langsung berhenti</option>
-                                <option>Bertahap mengurangi jumlah</option>
-                                <option>Penundaan jam merokok</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="pilihan_terapi">Pilihan Terapi</label>
-                            <select id="pilihan_terapi">
-                                <option value="" disabled selected>Pilih Jawaban...</option>
-                                <option>Konseling</option>
-                                <option>Farmakoterapi</option>
-                                <option>Kombinasi</option>
-                            </select>
-                        </div>
-                    </div>
-                </section>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg overflow-x-auto">
+                    <table class="w-full text-sm text-left whitespace-nowrap">
+                        <thead class="bg-slate-100">
+                            <tr>
+                                <th class="p-3 font-semibold">No.</th>
+                                <th class="p-3 font-semibold">Nama</th>
+                                <th class="p-3 font-semibold">Umur</th>
+                                <th class="p-3 font-semibold">Jenis Kelamin</th>
+                                <th class="p-3 font-semibold">Tgl Konseling Awal</th>
+                                <th class="p-3 font-semibold">Status Terkini</th>
+                                <th class="p-3 font-semibold">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="client-table-body">
+                            <!-- Data Klien akan di-render oleh JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="flex justify-end gap-2 mt-4">
+                    <button id="export-pdf-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-3 text-sm rounded-lg transition duration-300">Cetak PDF</button>
+                    <button id="export-excel-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-3 text-sm rounded-lg transition duration-300">Export Excel</button>
+                </div>
+            </div>
 
-                <!-- Pertemuan Berikutnya & Tindak Lanjut -->
-                <section class="form-section">
-                     <h3>V. Pertemuan Berikutnya & Tindak Lanjut</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                         <div class="form-group"><label for="nilai_keberhasilan">Nilai Keberhasilan</label><textarea id="nilai_keberhasilan" rows="3"></textarea></div>
-                         <div class="form-group"><label for="tindak_lanjut">Tindak Lanjut</label><select id="tindak_lanjut"><option value="" disabled selected>Pilih Jawaban...</option><option>Berhasil Berhenti Merokok</option><option>Kembali Merokok</option><option>Dirujuk ke Puskesmas</option><option>Proses Berjalan</option></select></div>
+            <!-- Layar Laporan -->
+            <div id="report-screen" class="hidden fade-in">
+                <div class="flex justify-between items-center mb-8">
+                    <h1 class="text-3xl font-bold text-slate-800">Laporan Bulanan</h1>
+                    <button id="print-report-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hidden">Cetak Laporan</button>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                        <div class="form-group !mb-0">
+                            <label for="report-month" class="block text-sm font-medium text-slate-700">Bulan</label>
+                            <select id="report-month" class="mt-1"></select>
+                        </div>
+                        <div class="form-group !mb-0">
+                            <label for="report-year" class="block text-sm font-medium text-slate-700">Tahun</label>
+                            <select id="report-year" class="mt-1"></select>
+                        </div>
+                        <button id="generate-report-btn" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-lg w-full">Tampilkan</button>
                     </div>
-                </section>
+                </div>
+                <div id="report-content" class="bg-white p-8 rounded-xl shadow-lg">
+                    <p class="text-center text-slate-500">Pilih bulan dan tahun untuk menampilkan laporan.</p>
+                </div>
+                <!-- Printable area -->
+                <div id="report-content-print" class="hidden"></div>
+            </div>
 
-                <div class="mt-8 text-right">
-                    <button type="submit" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300">
-                        Simpan Data Klien
+            <!-- Layar Admin -->
+            <div id="admin-screen" class="hidden fade-in">
+                <div class="flex justify-between items-center mb-8">
+                    <h1 class="text-3xl font-bold text-slate-800">Manajemen Pengguna</h1>
+                    <button id="add-new-user-btn" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-3 text-sm rounded-lg transition duration-300 whitespace-nowrap">
+                        + Tambah Pengguna
                     </button>
                 </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg overflow-x-auto">
+                    <table class="w-full text-sm text-left whitespace-nowrap">
+                        <thead class="bg-slate-100">
+                            <tr>
+                                <th class="p-3 font-semibold">No.</th>
+                                <th class="p-3 font-semibold">Nama Pengguna</th>
+                                <th class="p-3 font-semibold">Peran</th>
+                                <th class="p-3 font-semibold">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="user-table-body">
+                            <!-- Data Pengguna akan di-render oleh JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Layar Detail/Form Klien -->
+            <div id="client-detail-screen" class="hidden fade-in">
+                <header class="flex justify-between items-center mb-8">
+                    <h1 id="form-title" class="text-3xl font-bold text-slate-800">Tambah Klien Baru</h1>
+                    <button id="back-to-list-btn" class="bg-slate-500 hover:bg-slate-600 text-white font-bold py-2 px-5 rounded-lg transition duration-300">
+                        &larr; Kembali ke Daftar
+                    </button>
+                </header>
+
+                <form id="client-form">
+                    <input type="hidden" id="client-id">
+
+                    <section class="form-section">
+                        <h3>Identitas Klien</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="form-group"><label for="nama">Nama</label><input type="text" id="nama" required></div>
+                            <div class="form-group"><label for="nik">NIK</label><input type="text" id="nik"></div>
+                            <div class="form-group"><label for="no_rm">No. RM</label><input type="text" id="no_rm"></div>
+                            <div class="form-group"><label for="tempat_lahir">Tempat Lahir</label><input type="text" id="tempat_lahir"></div>
+                            <div class="form-group"><label for="tgl_lahir">Tanggal Lahir</label><input type="text" id="tgl_lahir" placeholder="DD/MM/YYYY"></div>
+                            <div class="form-group"><label for="umur">Umur (Tahun)</label><input type="number" id="umur" readonly class="bg-slate-200"></div>
+                            <div class="form-group md:col-span-2"><label for="alamat">Alamat Rumah</label><textarea id="alamat" rows="2"></textarea></div>
+                            <div class="form-group"><label for="no_hp">No. telp/HP</label><input type="tel" id="no_hp"></div>
+                            <div class="form-group"><label for="jenis_kelamin">Jenis Kelamin</label>
+                                <select id="jenis_kelamin">
+                                    <option value="" disabled selected>Pilih Jenis Kelamin...</option>
+                                    <option value="L">Laki-laki</option>
+                                    <option value="P">Perempuan</option>
+                                </select>
+                            </div>
+                            <div class="form-group"><label for="tanggal">Tanggal Konseling</label><input type="text" id="tanggal" placeholder="DD/MM/YYYY" required></div>
+                        </div>
+                    </section>
+
+                    <section class="form-section">
+                        <h3>I. Status Perilaku Merokok (Konseling Awal)</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div class="form-group"><label for="usia_mulai_merokok">Usia Mulai Merokok (tahun)</label><input type="number" id="usia_mulai_merokok"></div>
+                            <div class="form-group"><label for="lama_merokok">Lama Merokok (tahun)</label><input type="number" id="lama_merokok"></div>
+                            <div class="form-group"><label for="jumlah_rokok_hari">Jumlah Rokok/hari</label><input type="number" id="jumlah_rokok_hari"></div>
+                            <div class="form-group"><label for="alasan_mulai_merokok">Alasan Mulai Merokok</label><input type="text" id="alasan_mulai_merokok"></div>
+                            <div class="form-group"><label for="keluarga_merokok">Anggota Keluarga yg Merokok</label>
+                                <select id="keluarga_merokok">
+                                    <option value="" disabled selected>Pilih Opsi...</option>
+                                    <option value="tidak">Tidak Ada</option>
+                                    <option value="ada">Ada</option>
+                                </select>
+                            </div>
+                            <div class="form-group"><label for="skor_fagerstrom">Skor Fagerström</label>
+                                <div class="flex"><input type="number" id="skor_fagerstrom" class="rounded-r-none"><button type="button" id="show-fagerstrom-btn" class="bg-sky-600 text-white px-3 rounded-r-md hover:bg-sky-700">Ukur</button></div>
+                            </div>
+                            <div class="form-group"><label for="berat_badan">Berat Badan (kg)</label><input type="number" step="0.1" id="berat_badan"></div>
+                            <div class="form-group"><label for="tinggi_badan">Tinggi Badan (cm)</label><input type="number" id="tinggi_badan"></div>
+                            <div class="form-group"><label for="imt">IMT</label><input type="text" id="imt" readonly class="bg-slate-200"></div>
+                            <div class="form-group"><label for="tensi_darah">Tensi Darah (mmHg)</label><input type="text" id="tensi_darah" placeholder="cth: 120/80"></div>
+                            <div class="form-group"><label for="kadar_co">Kadar CO (ppm)</label><input type="number" id="kadar_co"></div>
+                        </div>
+                    </section>
+
+                    <section class="form-section">
+                        <h3>II. Riwayat Berhenti Merokok Sebelumnya</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div class="form-group"><label for="jumlah_usaha_berhenti">Jumlah Usaha Berhenti</label><input type="number" id="jumlah_usaha_berhenti"></div>
+                            <div class="form-group"><label for="kapan_usaha_terakhir">Kapan Usaha Terakhir?</label><input type="text" id="kapan_usaha_terakhir"></div>
+                            <div class="form-group"><label for="cara_berhenti">Cara Berhenti yg Digunakan</label><input type="text" id="cara_berhenti"></div>
+                            <div class="form-group"><label for="jumlah_hari_bebas_rokok">Jumlah Hari Bebas Rokok</label><input type="number" id="jumlah_hari_bebas_rokok"></div>
+                            <div class="form-group"><label for="masalah_dihadapi">Masalah yang Dihadapi</label><input type="text" id="masalah_dihadapi"></div>
+                            <div class="form-group"><label for="alasan_merokok_kembali">Alasan Mulai Merokok Kembali</label><input type="text" id="alasan_merokok_kembali"></div>
+                        </div>
+                    </section>
+
+                    <section class="form-section">
+                        <h3>III. Tingkat Perilaku</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+                            <div class="form-group">
+                                <label for="tingkat_kesiapan">Tingkat Kesiapan</label>
+                                <select id="tingkat_kesiapan">
+                                    <option value="" disabled selected>Pilih Tingkat Kesiapan...</option>
+                                    <option>Sedang memutuskan</option>
+                                    <option>Kebulatan niat</option>
+                                    <option>Persiapan</option>
+                                    <option>Aksi</option>
+                                    <option>Pemeliharaan</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="tingkat_motivasi">Tingkat Motivasi <span class="font-normal text-slate-500">(0: Tidak Termotivasi, 10: Sangat Termotivasi)</span></label>
+                                <div class="flex items-center space-x-3 mt-2">
+                                    <input type="range" id="tingkat_motivasi" min="0" max="10" value="5" class="w-full">
+                                    <span id="motivasi-value" class="font-bold text-lg text-teal-700 w-12 text-center p-1 bg-slate-200 rounded-md">5</span>
+                                </div>
+                            </div>
+                            <div class="form-group col-span-2">
+                                <label for="alasan_ingin_berhenti">Alasan Ingin Berhenti</label>
+                                <textarea id="alasan_ingin_berhenti" rows="2"></textarea>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="form-section">
+                        <h3>IV. Intervensi Tanggal Berhenti Merokok</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+                            <div class="form-group">
+                                <label for="metode_berhenti">Metode Berhenti</label>
+                                <select id="metode_berhenti">
+                                    <option value="" disabled selected>Pilih Metode Berhenti...</option>
+                                    <option>Langsung berhenti</option>
+                                    <option>Bertahap mengurangi jumlah</option>
+                                    <option>Penundaan jam merokok</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="pilihan_terapi">Pilihan Terapi</label>
+                                <select id="pilihan_terapi">
+                                    <option value="" disabled selected>Pilih Terapi...</option>
+                                    <option>Konseling</option>
+                                    <option>Farmakoterapi</option>
+                                    <option>Kombinasi</option>
+                                </select>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="form-section">
+                        <h3>V. Status Awal & Tindak Lanjut</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="form-group"><label for="nilai_keberhasilan">Nilai Keberhasilan</label><textarea id="nilai_keberhasilan" rows="3"></textarea></div>
+                            <div class="form-group"><label for="tindak_lanjut">Tindak Lanjut Awal</label>
+                                <select id="tindak_lanjut">
+                                    <option value="" disabled selected>Pilih Status Tindak Lanjut...</option>
+                                    <option>Berhasil Berhenti Merokok</option>
+                                    <option>Kembali Merokok</option>
+                                    <option>Dirujuk ke Puskesmas</option>
+                                    <option>Proses Berjalan</option>
+                                </select>
+                            </div>
+                        </div>
+                    </section>
+
+                    <div class="mt-8 text-right">
+                        <button type="submit" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300">
+                            Simpan Data Klien
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Bagian Riwayat Kunjungan Lanjutan -->
+                <section class="form-section mt-8">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="!m-0 !p-0 !border-none">VI. Riwayat Kunjungan Lanjutan</h3>
+                        <button id="add-follow-up-btn" class="bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-3 text-sm rounded-lg transition duration-300">
+                             + Tambah Kunjungan
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left whitespace-nowrap">
+                            <thead class="bg-slate-200">
+                                <tr>
+                                    <th class="p-2 font-semibold">No.</th>
+                                    <th class="p-2 font-semibold">Tgl Kunjungan</th>
+                                    <th class="p-2 font-semibold">Kadar CO (ppm)</th>
+                                    <th class="p-2 font-semibold">Status</th>
+                                    <th class="p-2 font-semibold">Catatan</th>
+                                    <th class="p-2 font-semibold">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="follow-up-history-body">
+                                <!-- Riwayat akan di-render oleh JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Form Pengguna -->
+    <div id="user-form-modal" class="modal">
+        <div class="modal-content">
+            <span id="close-user-form-btn" class="close-btn">&times;</span>
+            <h2 id="user-form-title" class="text-2xl font-bold text-teal-700 mb-6">Tambah Pengguna</h2>
+            <form id="user-form">
+                <input type="hidden" id="user-id">
+                <div class="form-group">
+                    <label for="new-username">Nama Pengguna</label>
+                    <input type="text" id="new-username" required>
+                </div>
+                <div class="form-group">
+                    <label for="new-password">Kata Sandi</label>
+                    <div class="relative">
+                        <input type="password" id="new-password" required class="pr-10">
+                        <button type="button" id="toggle-password-visibility" class="absolute inset-y-0 right-0 px-3 flex items-center text-slate-500">
+                            <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.27 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" /></svg>
+                            <svg id="eye-slash-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.955 9.955 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clip-rule="evenodd" /><path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.303 3.707a1 1 0 011.414-1.414l14 14a1 1 0 01-1.414 1.414l-4.26-4.26z" /></svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="user-role">Peran</label>
+                    <select id="user-role">
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-lg mt-4">Simpan</button>
             </form>
         </div>
     </div>
@@ -292,8 +575,8 @@
                     </div>
                     <div>
                         <label class="font-semibold">3. Rokok mana yang paling Anda tidak relakan untuk dihentikan?</label>
-                         <div><label><input type="radio" name="q3" value="1" required> Rokok pertama pada pagi hari</label></div>
-                         <div><label><input type="radio" name="q3" value="0"> Lainnya</label></div>
+                        <div><label><input type="radio" name="q3" value="1" required> Rokok pertama pada pagi hari</label></div>
+                        <div><label><input type="radio" name="q3" value="0"> Lainnya</label></div>
                     </div>
                     <div>
                         <label class="font-semibold">4. Apakah Anda merokok lebih banyak dalam dua jam pertama hari Anda?</label>
@@ -301,14 +584,14 @@
                         <div><label><input ubiquity="265" type="radio" name="q4" value="0"> Tidak</label></div>
                     </div>
                     <div>
-                         <label class="font-semibold">5. Apakah Anda kesulitan menahan merokok di tempat yang dilarang?</label>
-                         <div><label><input type="radio" name="q5" value="1" required> Ya</label></div>
-                         <div><label><input type="radio" name="q5" value="0"> Tidak</label></div>
+                        <label class="font-semibold">5. Apakah Anda kesulitan menahan merokok di tempat yang dilarang?</label>
+                        <div><label><input type="radio" name="q5" value="1" required> Ya</label></div>
+                        <div><label><input type="radio" name="q5" value="0"> Tidak</label></div>
                     </div>
                     <div>
-                         <label class="font-semibold">6. Apakah Anda masih merokok ketika sakit berat?</label>
-                         <div><label><input type="radio" name="q6" value="1" required> Ya</label></div>
-                         <div><label><input type="radio" name="q6" value="0"> Tidak</label></div>
+                        <label class="font-semibold">6. Apakah Anda masih merokok ketika sakit berat?</label>
+                        <div><label><input type="radio" name="q6" value="1" required> Ya</label></div>
+                        <div><label><input type="radio" name="q6" value="0"> Tidak</label></div>
                     </div>
                 </div>
                 <button type="submit" class="mt-6 w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-lg">
@@ -317,12 +600,47 @@
             </form>
         </div>
     </div>
-    
+
+    <!-- Modal Form Kunjungan Lanjutan (Follow-up) -->
+    <div id="follow-up-modal" class="modal">
+        <div class="modal-content">
+            <span id="close-follow-up-btn" class="close-btn">&times;</span>
+            <h2 id="follow-up-form-title" class="text-2xl font-bold text-teal-700 mb-6">Tambah Kunjungan Lanjutan</h2>
+            <form id="follow-up-form">
+                <input type="hidden" id="follow-up-client-id">
+                <input type="hidden" id="follow-up-id">
+                <div class="form-group">
+                    <label for="follow-up-date">Tanggal Kunjungan</label>
+                    <input type="text" id="follow-up-date" placeholder="DD/MM/YYYY" required>
+                </div>
+                <div class="form-group">
+                    <label for="follow-up-co">Kadar CO (ppm)</label>
+                    <input type="number" id="follow-up-co">
+                </div>
+                <div class="form-group">
+                    <label for="follow-up-status">Status Klien</label>
+                    <select id="follow-up-status" required>
+                        <option value="" disabled selected>Pilih Status...</option>
+                        <option>Proses Berjalan</option>
+                        <option>Berhasil Berhenti Merokok</option>
+                        <option>Kembali Merokok</option>
+                        <option>Dirujuk ke Puskesmas</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="follow-up-notes">Catatan / Rencana Tindak Lanjut</label>
+                    <textarea id="follow-up-notes" rows="3"></textarea>
+                </div>
+                <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-lg mt-4">Simpan Kunjungan</button>
+            </form>
+        </div>
+    </div>
+
     <!-- Modal Konfirmasi Hapus -->
     <div id="delete-confirm-modal" class="modal">
         <div class="modal-content">
             <h2 class="text-2xl font-bold text-red-700 mb-4">Konfirmasi Hapus</h2>
-            <p id="delete-confirm-text" class="mb-6 text-slate-600">Apakah Anda yakin ingin menghapus data klien ini? Tindakan ini tidak dapat dibatalkan.</p>
+            <p id="delete-confirm-text" class="mb-6 text-slate-600">Apakah Anda yakin ingin menghapus data ini? Tindakan ini tidak dapat dibatalkan.</p>
             <div class="flex justify-end space-x-4">
                 <button id="cancel-delete-btn" class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-2 px-4 rounded-lg">Batal</button>
                 <button id="confirm-delete-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">Ya, Hapus</button>
@@ -331,440 +649,905 @@
     </div>
 
     <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        // --- Referensi Elemen DOM ---
-        const clientListScreen = document.getElementById('client-list-screen');
-        const clientDetailScreen = document.getElementById('client-detail-screen');
-        const clientListContainer = document.getElementById('client-list-container');
-        const clientForm = document.getElementById('client-form');
-        const formTitle = document.getElementById('form-title');
-        const clientIdInput = document.getElementById('client-id');
-        const statusChartCanvas = document.getElementById('client-status-chart');
-        const genderChartCanvas = document.getElementById('client-gender-chart');
-        const totalClientsDisplay = document.getElementById('total-clients-display');
-        const tglLahirInput = document.getElementById('tgl_lahir');
-        const umurInput = document.getElementById('umur');
-        const beratBadanInput = document.getElementById('berat_badan');
-        const tinggiBadanInput = document.getElementById('tinggi_badan');
-        const imtInput = document.getElementById('imt');
-        const tingkatMotivasiInput = document.getElementById('tingkat_motivasi');
-        const motivasiValueSpan = document.getElementById('motivasi-value');
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Referensi Elemen DOM ---
+            const loginScreen = document.getElementById('login-screen');
+            const appContainer = document.getElementById('app-container');
+            const loginForm = document.getElementById('login-form');
+            const loginError = document.getElementById('login-error');
+            const logoutBtn = document.getElementById('logout-btn');
 
-        const addNewClientBtn = document.getElementById('add-new-client-btn');
-        const backToListBtn = document.getElementById('back-to-list-btn');
+            const dashboardScreen = document.getElementById('dashboard-screen');
+            const clientDataScreen = document.getElementById('client-data-screen');
+            const adminScreen = document.getElementById('admin-screen');
+            const reportScreen = document.getElementById('report-screen');
+            const clientDetailScreen = document.getElementById('client-detail-screen');
 
-        const fagerstromModal = document.getElementById('fagerstrom-modal');
-        const showFagerstromBtn = document.getElementById('show-fagerstrom-btn');
-        const closeFagerstromBtn = document.getElementById('close-fagerstrom-btn');
-        const fagerstromForm = document.getElementById('fagerstrom-form');
-        const skorFagerstromInput = document.getElementById('skor_fagerstrom');
-        
-        const deleteConfirmModal = document.getElementById('delete-confirm-modal');
-        const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
-        const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
-        
-        let clients = [];
-        let statusChart;
-        let genderChart;
-        let clientIdToDelete = null;
+            const clientTableBody = document.getElementById('client-table-body');
+            const userTableBody = document.getElementById('user-table-body');
+            const clientForm = document.getElementById('client-form');
+            const formTitle = document.getElementById('form-title');
+            const clientIdInput = document.getElementById('client-id');
+            const statusChartCanvas = document.getElementById('client-status-chart');
+            const genderChartCanvas = document.getElementById('client-gender-chart');
+            const totalClientsDisplay = document.getElementById('total-clients-display');
+            const tglLahirInput = document.getElementById('tgl_lahir');
+            const umurInput = document.getElementById('umur');
+            const beratBadanInput = document.getElementById('berat_badan');
+            const tinggiBadanInput = document.getElementById('tinggi_badan');
+            const imtInput = document.getElementById('imt');
+            const tingkatMotivasiInput = document.getElementById('tingkat_motivasi');
+            const motivasiValueSpan = document.getElementById('motivasi-value');
 
-        Chart.register(ChartDataLabels);
+            const addNewClientBtn = document.getElementById('add-new-client-btn');
+            const addNewUserBtn = document.getElementById('add-new-user-btn');
+            const backToListBtn = document.getElementById('back-to-list-btn');
 
-        // Initialize date pickers
-        flatpickr("#tgl_lahir", {
-            dateFormat: "d/m/Y",
-            allowInput: true,
-            onChange: function(selectedDates, dateStr, instance) {
-                const isoDate = parseIndonesianDate(dateStr);
-                umurInput.value = calculateAge(isoDate);
-            },
-        });
-        flatpickr("#tanggal", {
-            dateFormat: "d/m/Y",
-            allowInput: true,
-            defaultDate: "today"
-        });
+            const navDashboard = document.getElementById('nav-dashboard');
+            const navDataClients = document.getElementById('nav-data-clients');
+            const navAdmin = document.getElementById('nav-admin');
+            const navLaporan = document.getElementById('nav-laporan');
+            const searchInput = document.getElementById('search-input');
+            const exportPdfBtn = document.getElementById('export-pdf-btn');
+            const exportExcelBtn = document.getElementById('export-excel-btn');
+            const printReportBtn = document.getElementById('print-report-btn');
+            const reportMonthSelect = document.getElementById('report-month');
+            const reportYearSelect = document.getElementById('report-year');
+            const generateReportBtn = document.getElementById('generate-report-btn');
+            const reportContent = document.getElementById('report-content');
 
-        // --- Fungsi untuk styling placeholder select ---
-        function updateSelectStyles() {
-            clientForm.querySelectorAll('select').forEach(select => {
-                if (select.value === "") {
-                    select.classList.add('placeholder-style');
+            const userFormModal = document.getElementById('user-form-modal');
+            const userForm = document.getElementById('user-form');
+            const userFormTitle = document.getElementById('user-form-title');
+            const closeUserFormBtn = document.getElementById('close-user-form-btn');
+            const userIdInput = document.getElementById('user-id');
+            const newPasswordInput = document.getElementById('new-password');
+            const togglePasswordVisibilityBtn = document.getElementById('toggle-password-visibility');
+            const eyeIcon = document.getElementById('eye-icon');
+            const eyeSlashIcon = document.getElementById('eye-slash-icon');
+
+            const fagerstromModal = document.getElementById('fagerstrom-modal');
+            const showFagerstromBtn = document.getElementById('show-fagerstrom-btn');
+            const closeFagerstromBtn = document.getElementById('close-fagerstrom-btn');
+            const fagerstromForm = document.getElementById('fagerstrom-form');
+            const skorFagerstromInput = document.getElementById('skor_fagerstrom');
+
+            // NEW: Follow-up Elements
+            const addFollowUpBtn = document.getElementById('add-follow-up-btn');
+            const followUpHistoryBody = document.getElementById('follow-up-history-body');
+            const followUpModal = document.getElementById('follow-up-modal');
+            const followUpForm = document.getElementById('follow-up-form');
+            const closeFollowUpBtn = document.getElementById('close-follow-up-btn');
+            const followUpFormTitle = document.getElementById('follow-up-form-title');
+
+            const deleteConfirmModal = document.getElementById('delete-confirm-modal');
+            const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
+            const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+
+            let clients = [];
+            let users = [];
+            let statusChart;
+            let genderChart;
+            let itemToDelete = {
+                id: null,
+                type: null,
+                clientId: null
+            };
+
+            Chart.register(ChartDataLabels);
+
+            // --- Inisialisasi Flatpickr ---
+            flatpickr("#tgl_lahir", {
+                dateFormat: "d/m/Y",
+                allowInput: true,
+                onChange: (selectedDates, dateStr) => {
+                    umurInput.value = calculateAge(parseIndonesianDate(dateStr));
+                }
+            });
+            flatpickr("#tanggal", {
+                dateFormat: "d/m/Y",
+                allowInput: true,
+                defaultDate: "today"
+            });
+            flatpickr("#follow-up-date", {
+                dateFormat: "d/m/Y",
+                allowInput: true,
+                defaultDate: "today"
+            });
+
+            function updateSelectStyles() {
+                clientForm.querySelectorAll('select').forEach(s => s.value === "" ? s.classList.add('placeholder-style') : s.classList.remove('placeholder-style'));
+                const followUpStatusSelect = document.getElementById('follow-up-status');
+                if (followUpStatusSelect.value === "") followUpStatusSelect.classList.add('placeholder-style');
+                else followUpStatusSelect.classList.remove('placeholder-style');
+            }
+
+            function setActiveNav(activeId) {
+                [navDashboard, navDataClients, navAdmin, navLaporan].forEach(nav => {
+                    nav.classList.remove('bg-teal-600', 'text-white', 'font-semibold');
+                    nav.classList.add('text-slate-300', 'hover:bg-slate-700', 'hover:text-white');
+                });
+                const activeNav = document.getElementById(activeId);
+                activeNav.classList.add('bg-teal-600', 'text-white', 'font-semibold');
+                activeNav.classList.remove('text-slate-300', 'hover:bg-slate-700');
+            }
+
+            function initializeApp() {
+                if (sessionStorage.getItem('isLoggedIn') === 'true') showApp();
+                else showLogin();
+                clientForm.querySelectorAll('select').forEach(select => select.addEventListener('change', updateSelectStyles));
+                document.getElementById('follow-up-status').addEventListener('change', updateSelectStyles);
+                populateDateFilters();
+            }
+
+            function showLogin() {
+                document.body.classList.add('flex', 'items-center', 'justify-center');
+                loginScreen.style.display = 'block';
+                appContainer.style.display = 'none';
+            }
+
+            function showApp() {
+                document.body.classList.remove('flex', 'items-center', 'justify-center');
+                loginScreen.style.display = 'none';
+                appContainer.style.display = 'flex';
+                loadClients();
+                loadUsers();
+                const userRole = sessionStorage.getItem('userRole');
+                if (userRole === 'admin') navAdmin.classList.remove('hidden');
+                else navAdmin.classList.add('hidden');
+                showScreen('dashboard');
+            }
+
+            function handleLogin(e) {
+                e.preventDefault();
+                loadUsers();
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                const user = users.find(u => u.username === username && u.password === password);
+                if (user) {
+                    sessionStorage.setItem('isLoggedIn', 'true');
+                    sessionStorage.setItem('userRole', user.role);
+                    showApp();
                 } else {
-                    select.classList.remove('placeholder-style');
+                    loginError.textContent = 'Nama pengguna atau kata sandi salah.';
+                    loginError.classList.remove('hidden');
                 }
-            });
-        }
-
-        // --- Fungsi Utama ---
-        function initializeApp() {
-            loadClients();
-            renderDashboard();
-            showScreen('list');
-            // Tambahkan event listener ke semua select di form
-            clientForm.querySelectorAll('select').forEach(select => {
-                select.addEventListener('change', updateSelectStyles);
-            });
-        }
-
-        function renderDashboard() {
-            renderClientList();
-            renderTotalClientCount();
-            renderStatusChart();
-            renderGenderChart();
-        }
-
-        function showScreen(screen) {
-            if (screen === 'list') {
-                clientListScreen.style.display = 'block';
-                clientDetailScreen.style.display = 'none';
-                renderDashboard();
-            } else {
-                clientListScreen.style.display = 'none';
-                clientDetailScreen.style.display = 'block';
             }
-        }
 
-        function loadClients() {
-            clients = JSON.parse(localStorage.getItem('counselingClients')) || [];
-        }
-
-        function saveClients() {
-            localStorage.setItem('counselingClients', JSON.stringify(clients));
-        }
-
-        function calculateAge(dateString) { // expects YYYY-MM-DD
-            if (!dateString) return '';
-            const today = new Date();
-            const birthDate = new Date(dateString);
-            let age = today.getFullYear() - birthDate.getFullYear();
-            const m = today.getMonth() - birthDate.getMonth();
-            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-                age--;
+            function handleLogout() {
+                sessionStorage.clear();
+                showLogin();
             }
-            return age >= 0 ? age : '';
-        }
 
-        function formatDateToIndonesian(dateString) { // YYYY-MM-DD -> DD/MM/YYYY
-            if (!dateString || !dateString.includes('-')) return dateString;
-            const parts = dateString.split('-');
-            if (parts.length !== 3) return dateString;
-            const [year, month, day] = parts;
-            return `${day}/${month}/${year}`;
-        }
-
-        function parseIndonesianDate(dateString) { // DD/MM/YYYY -> YYYY-MM-DD
-            if (!dateString || !dateString.includes('/')) return dateString;
-            const parts = dateString.split('/');
-            if (parts.length !== 3) return '';
-            const [day, month, year] = parts;
-            if (day && month && year && year.length === 4) {
-                return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+            function renderDashboard() {
+                renderTotalClientCount();
+                renderStatusChart();
+                renderGenderChart();
             }
-            return ''; // Return empty if format is incorrect
-        }
-        
-        function calculateIMT() {
-            const weight = parseFloat(beratBadanInput.value);
-            const height = parseFloat(tinggiBadanInput.value);
 
-            if (weight > 0 && height > 0) {
-                const heightInMeters = height / 100;
-                const imt = weight / (heightInMeters * heightInMeters);
-                imtInput.value = imt.toFixed(2); // Tampilkan 2 angka desimal
-            } else {
-                imtInput.value = '';
-            }
-        }
-        
-        // --- Render Tampilan ---
-        function renderClientList() {
-            clientListContainer.innerHTML = '';
-            if (clients.length === 0) {
-                clientListContainer.innerHTML = `<p class="text-center text-slate-500 italic py-4">Belum ada data klien.</p>`;
-                return;
-            }
-            clients.forEach(client => {
-                const clientEl = document.createElement('div');
-                clientEl.className = 'bg-slate-50 p-3 rounded-lg flex justify-between items-center';
-                const clientAge = client.tgl_lahir ? `${calculateAge(client.tgl_lahir)} tahun` : 'Umur T/A';
-                clientEl.innerHTML = `
-                    <div>
-                        <p class="font-semibold text-slate-800">${client.nama || 'Tanpa Nama'}</p>
-                        <p class="text-sm text-slate-500">Umur: ${clientAge}</p>
-                    </div>
-                    <div class="space-x-2">
-                        <button class="edit-client-btn text-blue-600 hover:text-blue-800" data-id="${client.id}">Ubah</button>
-                        <button class="delete-client-btn text-red-600 hover:text-red-800" data-id="${client.id}">Hapus</button>
-                    </div>
-                `;
-                clientListContainer.appendChild(clientEl);
-            });
-        }
-
-        function renderTotalClientCount() {
-            totalClientsDisplay.textContent = clients.length;
-        }
-
-        function renderStatusChart() {
-            if (statusChart) {
-                statusChart.destroy();
-            }
-            
-            const statusCounts = clients.reduce((acc, client) => {
-                const status = client.tindak_lanjut || 'Proses Berjalan';
-                acc[status] = (acc[status] || 0) + 1;
-                return acc;
-            }, {});
-
-            const ctx = statusChartCanvas.getContext('2d');
-            statusChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(statusCounts),
-                    datasets: [{
-                        label: 'Status Klien',
-                        data: Object.values(statusCounts),
-                        backgroundColor: [
-                            '#10b981', // green
-                            '#ef4444', // red
-                            '#3b82f6', // blue
-                            '#f59e0b'  // amber
-                        ],
-                        hoverOffset: 4
-                    }]
-                },
-                 options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { position: 'top' },
-                        title: { display: false },
-                        datalabels: {
-                            formatter: (value, ctx) => {
-                                if (value === 0) return '';
-                                let sum = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                                if (sum === 0) return '';
-                                let percentage = ((value / sum) * 100).toFixed(1) + '%';
-                                return `${value}\n(${percentage})`;
-                            },
-                            color: '#fff',
-                            textAlign: 'center',
-                            font: {
-                                weight: 'bold'
-                            }
-                        }
-                    }
+            function showScreen(screen) {
+                [dashboardScreen, clientDataScreen, clientDetailScreen, adminScreen, reportScreen].forEach(s => s.style.display = 'none');
+                if (screen === 'dashboard') {
+                    dashboardScreen.style.display = 'block';
+                    renderDashboard();
+                    setActiveNav('nav-dashboard');
+                } else if (screen === 'data') {
+                    clientDataScreen.style.display = 'block';
+                    renderClientTable();
+                    setActiveNav('nav-data-clients');
+                } else if (screen === 'report') {
+                    reportScreen.style.display = 'block';
+                    reportContent.innerHTML = `<p class="text-center text-slate-500">Pilih bulan dan tahun untuk menampilkan laporan.</p>`;
+                    printReportBtn.classList.add('hidden');
+                    setActiveNav('nav-laporan');
+                } else if (screen === 'admin') {
+                    adminScreen.style.display = 'block';
+                    renderUserTable();
+                    setActiveNav('nav-admin');
+                } else if (screen === 'form') {
+                    clientDetailScreen.style.display = 'block';
+                    setActiveNav('nav-data-clients');
                 }
-            });
-        }
-
-        function renderGenderChart() {
-            if (genderChart) {
-                genderChart.destroy();
             }
-            
-            const genderCounts = clients.reduce((acc, client) => {
-                const gender = client.jenis_kelamin;
-                if (gender === 'L') {
-                    acc['Laki-laki'] = (acc['Laki-laki'] || 0) + 1;
-                } else if (gender === 'P') {
-                    acc['Perempuan'] = (acc['Perempuan'] || 0) + 1;
+
+            // --- DATA HANDLING ---
+            function loadClients() {
+                clients = JSON.parse(localStorage.getItem('counselingClients')) || [];
+            }
+
+            function saveClients() {
+                localStorage.setItem('counselingClients', JSON.stringify(clients));
+            }
+
+            function loadUsers() {
+                users = JSON.parse(localStorage.getItem('counselingUsers')) || [];
+                if (users.length === 0) { // Default users
+                    users = [{
+                        id: 1,
+                        username: 'admin',
+                        password: 'admin123',
+                        role: 'admin'
+                    }, {
+                        id: 2,
+                        username: 'user',
+                        password: 'user123',
+                        role: 'user'
+                    }];
+                    saveUsers();
                 }
-                return acc;
-            }, { 'Laki-laki': 0, 'Perempuan': 0 });
-            
-            const ctx = genderChartCanvas.getContext('2d');
-            genderChart = new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: Object.keys(genderCounts),
-                    datasets: [{
-                        label: 'Jenis Kelamin',
-                        data: Object.values(genderCounts),
-                        backgroundColor: [
-                            '#3b82f6', // blue
-                            '#ec4899'  // pink
-                        ],
-                        hoverOffset: 4
-                    }]
-                },
-                 options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { position: 'top' },
-                        title: { display: false },
-                        datalabels: {
-                           formatter: (value, ctx) => {
-                                if (value === 0) return '';
-                                let sum = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                                if (sum === 0) return '';
-                                let percentage = ((value / sum) * 100).toFixed(1) + '%';
-                                return `${value}\n(${percentage})`;
-                            },
-                            color: '#fff',
-                            textAlign: 'center',
-                            font: {
-                                weight: 'bold'
-                            }
-                        }
-                    }
+            }
+
+            function saveUsers() {
+                localStorage.setItem('counselingUsers', JSON.stringify(users));
+            }
+
+            // --- HELPERS ---
+            function calculateAge(dateString) {
+                if (!dateString) return '';
+                const today = new Date();
+                const birthDate = new Date(dateString);
+                let age = today.getFullYear() - birthDate.getFullYear();
+                const m = today.getMonth() - birthDate.getMonth();
+                if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+                return age >= 0 ? age : '';
+            }
+
+            function formatDateToIndonesian(dateString) {
+                if (!dateString || !dateString.includes('-')) return dateString;
+                const [year, month, day] = dateString.split('-');
+                return `${day}/${month}/${year}`;
+            }
+
+            function parseIndonesianDate(dateString) {
+                if (!dateString || !dateString.includes('/')) return dateString;
+                const [day, month, year] = dateString.split('/');
+                if (day && month && year && year.length === 4) return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+                return '';
+            }
+
+            function calculateIMT() {
+                const weight = parseFloat(beratBadanInput.value);
+                const height = parseFloat(tinggiBadanInput.value);
+                if (weight > 0 && height > 0) {
+                    const heightInMeters = height / 100;
+                    imtInput.value = (weight / (heightInMeters * heightInMeters)).toFixed(2);
+                } else imtInput.value = '';
+            }
+
+            function getLatestStatus(client) {
+                if (client.followUps && client.followUps.length > 0) {
+                    const sortedFollowUps = [...client.followUps].sort((a, b) => new Date(a.date) - new Date(b.date));
+                    return sortedFollowUps[sortedFollowUps.length - 1].status;
                 }
-            });
-        }
-        
-        // --- Fungsi Form Klien ---
-        function showClientForm(clientId = null) {
-            clientForm.reset();
-            motivasiValueSpan.textContent = '5';
-            
-            if (clientId) {
+                return client.tindak_lanjut || 'Proses Berjalan';
+            }
+
+            // --- RENDERING ---
+            function renderClientTable(filteredClients = clients) {
+                clientTableBody.innerHTML = '';
+                if (filteredClients.length === 0) {
+                    clientTableBody.innerHTML = `<tr><td colspan="7" class="text-center p-4 text-slate-500 italic">Data klien tidak ditemukan.</td></tr>`;
+                    return;
+                }
+                filteredClients.forEach((client, index) => {
+                    const clientAge = client.tgl_lahir ? `${calculateAge(client.tgl_lahir)}` : 'T/A';
+                    const latestStatus = getLatestStatus(client);
+                    const row = document.createElement('tr');
+                    row.className = 'border-b hover:bg-slate-50';
+                    row.innerHTML = `<td class="p-3">${index + 1}</td><td class="p-3">${client.nama || '-'}</td><td class="p-3">${clientAge}</td><td class="p-3">${client.jenis_kelamin === 'L' ? 'Laki-laki' : (client.jenis_kelamin === 'P' ? 'Perempuan' : '-')}</td><td class="p-3">${formatDateToIndonesian(client.tanggal) || '-'}</td><td class="p-3 font-medium">${latestStatus}</td>
+                    <td class="p-3 flex space-x-2">
+                        <button class="edit-client-btn text-blue-600 hover:text-blue-800 p-1" title="Ubah Data & Riwayat" data-id="${client.id}">
+                           <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"></path><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd"></path></svg>
+                        </button>
+                        <button class="delete-client-btn text-red-600 hover:text-red-800 p-1" title="Hapus Klien" data-id="${client.id}">
+                           <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd"></path></svg>
+                        </button>
+                    </td>`;
+                    clientTableBody.appendChild(row);
+                });
+            }
+
+            function renderUserTable() {
+                userTableBody.innerHTML = '';
+                if (users.length === 0) {
+                    userTableBody.innerHTML = `<tr><td colspan="4" class="text-center p-4 text-slate-500 italic">Data pengguna tidak ditemukan.</td></tr>`;
+                    return;
+                }
+                users.forEach((user, index) => {
+                    const row = document.createElement('tr');
+                    row.className = 'border-b hover:bg-slate-50';
+                    row.innerHTML = `<td class="p-3">${index + 1}</td><td class="p-3">${user.username}</td><td class="p-3">${user.role}</td><td class="p-3 flex space-x-2"><button class="edit-user-btn text-blue-600 hover:text-blue-800 p-1" data-id="${user.id}"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"></path><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd"></path></svg></button><button class="delete-user-btn text-red-600 hover:text-red-800 p-1" data-id="${user.id}"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd"></path></svg></button></td>`;
+                    userTableBody.appendChild(row);
+                });
+            }
+
+            function renderFollowUpHistory(clientId) {
+                followUpHistoryBody.innerHTML = '';
                 const client = clients.find(c => c.id === clientId);
-                if (client) {
-                    formTitle.textContent = 'Ubah Data Klien';
-                    populateForm(client);
+                if (!client || !client.followUps || client.followUps.length === 0) {
+                    followUpHistoryBody.innerHTML = `<tr><td colspan="6" class="text-center p-3 text-slate-500 italic">Belum ada kunjungan lanjutan.</td></tr>`;
+                    return;
                 }
-            } else {
-                formTitle.textContent = 'Tambah Klien Baru';
-                clientIdInput.value = '';
+
+                const sortedFollowUps = [...client.followUps].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                sortedFollowUps.forEach((fu, index) => {
+                    const row = document.createElement('tr');
+                    row.className = 'border-b';
+                    row.innerHTML = `
+                    <td class="p-2">${sortedFollowUps.length - index}</td>
+                    <td class="p-2">${formatDateToIndonesian(fu.date)}</td>
+                    <td class="p-2">${fu.coLevel || '-'}</td>
+                    <td class="p-2">${fu.status}</td>
+                    <td class="p-2">${fu.notes || '-'}</td>
+                    <td class="p-2 flex space-x-1">
+                        <button class="edit-follow-up-btn text-blue-600 hover:text-blue-800 p-1" data-client-id="${clientId}" data-follow-up-id="${fu.id}" title="Ubah Kunjungan">
+                           <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"></path><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd"></path></svg>
+                        </button>
+                        <button class="delete-follow-up-btn text-red-600 hover:text-red-800 p-1" data-client-id="${clientId}" data-follow-up-id="${fu.id}" title="Hapus Kunjungan">
+                           <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd"></path></svg>
+                        </button>
+                    </td>`;
+                    followUpHistoryBody.appendChild(row);
+                });
             }
-            updateSelectStyles(); // Terapkan style setelah reset/populate
-            showScreen('detail');
-        }
-        
-        function populateForm(client) {
-            Object.keys(client).forEach(key => {
-                const input = document.getElementById(key);
-                if (input) {
-                    if (key === 'tgl_lahir' || key === 'tanggal') {
-                        if(input._flatpickr) {
-                            input._flatpickr.setDate(parseIndonesianDate(client[key]), true);
-                        } else {
-                           input.value = formatDateToIndonesian(client[key]);
+
+            // --- CHART RENDERING ---
+            function renderTotalClientCount() {
+                totalClientsDisplay.textContent = clients.length;
+            }
+
+            function renderStatusChart() {
+                if (statusChart) statusChart.destroy();
+                const sC = clients.reduce((a, c) => {
+                    const s = getLatestStatus(c);
+                    a[s] = (a[s] || 0) + 1;
+                    return a;
+                }, {});
+                const ctx = statusChartCanvas.getContext('2d');
+                statusChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(sC),
+                        datasets: [{
+                            data: Object.values(sC),
+                            backgroundColor: ['#10b981', '#ef4444', '#3b82f6', '#f59e0b', '#64748b'],
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'top'
+                            },
+                            title: {
+                                display: false
+                            },
+                            datalabels: {
+                                formatter: (v, c) => {
+                                    let s = c.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                    if (v === 0 || s === 0) return '';
+                                    let p = ((v / s) * 100).toFixed(1) + '%';
+                                    return `${v}\n(${p})`;
+                                },
+                                color: '#fff',
+                                textAlign: 'center',
+                                font: {
+                                    weight: 'bold'
+                                }
+                            }
                         }
-                    } else {
-                        input.value = client[key];
                     }
-                }
-            });
-            
-            if (client.tgl_lahir) {
-                 const isoDate = parseIndonesianDate(document.getElementById('tgl_lahir').value);
-                 umurInput.value = calculateAge(isoDate);
-            } else {
-                 umurInput.value = '';
+                });
             }
-            motivasiValueSpan.textContent = tingkatMotivasiInput.value || '5';
-            calculateIMT();
-            updateSelectStyles(); // Terapkan style setelah nilai diisi
-        }
-        
-        function handleFormSubmit(e) {
-            e.preventDefault();
-            const id = clientIdInput.value;
-            const clientData = {};
-            
-            const inputs = clientForm.querySelectorAll('input, select, textarea');
-            inputs.forEach(input => {
-                if(input.id) {
-                     if (input.id === 'tgl_lahir' || input.id === 'tanggal') {
-                        clientData[input.id] = parseIndonesianDate(input.value);
-                    } else {
-                        clientData[input.id] = input.value;
+
+            function renderGenderChart() {
+                if (genderChart) genderChart.destroy();
+                const gC = clients.reduce((a, c) => {
+                    if (c.jenis_kelamin === 'L') a['Laki-laki'] = (a['Laki-laki'] || 0) + 1;
+                    else if (c.jenis_kelamin === 'P') a['Perempuan'] = (a['Perempuan'] || 0) + 1;
+                    return a;
+                }, {
+                    'Laki-laki': 0,
+                    'Perempuan': 0
+                });
+                const ctx = genderChartCanvas.getContext('2d');
+                genderChart = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: Object.keys(gC),
+                        datasets: [{
+                            data: Object.values(gC),
+                            backgroundColor: ['#3b82f6', '#ec4899'],
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'top'
+                            },
+                            title: {
+                                display: false
+                            },
+                            datalabels: {
+                                formatter: (v, c) => {
+                                    let s = c.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                    if (v === 0 || s === 0) return '';
+                                    let p = ((v / s) * 100).toFixed(1) + '%';
+                                    return `${v}\n(${p})`;
+                                },
+                                color: '#fff',
+                                textAlign: 'center',
+                                font: {
+                                    weight: 'bold'
+                                }
+                            }
+                        }
                     }
+                });
+            }
+
+            // --- FORM HANDLING ---
+            function showClientForm(clientId = null) {
+                clientForm.reset();
+                motivasiValueSpan.textContent = '5';
+                if (clientId) {
+                    const c = clients.find(cl => cl.id === clientId);
+                    if (c) {
+                        formTitle.textContent = 'Ubah Data Klien';
+                        populateForm(c);
+                        renderFollowUpHistory(clientId);
+                    }
+                } else {
+                    formTitle.textContent = 'Tambah Klien Baru';
+                    clientIdInput.value = '';
+                    renderFollowUpHistory(null);
                 }
-            });
-            
-            if (id) {
-                const index = clients.findIndex(c => c.id === id);
-                clients[index] = { ...clients[index], ...clientData };
-            } else {
-                clientData.id = Date.now().toString();
-                clients.push(clientData);
+                updateSelectStyles();
+                showScreen('form');
             }
-            
-            saveClients();
-            showScreen('list');
-        }
-        
-        function deleteClient(id) {
-            clientIdToDelete = id;
-            deleteConfirmModal.style.display = 'flex';
-        }
-        
-        function handleFagerstromSubmit(e) {
-            e.preventDefault();
-            let score = 0;
-            const formData = new FormData(fagerstromForm);
-            for (let value of formData.values()) {
-                score += parseInt(value, 10);
-            }
-            skorFagerstromInput.value = score;
-            fagerstromModal.style.display = 'none';
-        }
 
-        // --- Event Listeners ---
-        addNewClientBtn.addEventListener('click', () => showClientForm());
-        backToListBtn.addEventListener('click', () => showScreen('list'));
-        clientForm.addEventListener('submit', handleFormSubmit);
-        
-        beratBadanInput.addEventListener('input', calculateIMT);
-        tinggiBadanInput.addEventListener('input', calculateIMT);
-
-        tingkatMotivasiInput.addEventListener('input', () => {
-            motivasiValueSpan.textContent = tingkatMotivasiInput.value;
-        });
-
-        clientListContainer.addEventListener('click', (e) => {
-            if (e.target.classList.contains('edit-client-btn')) {
-                showClientForm(e.target.dataset.id);
+            function populateForm(client) {
+                Object.keys(client).forEach(key => {
+                    const i = document.getElementById(key);
+                    if (i) {
+                        if (key === 'tgl_lahir' || key === 'tanggal') {
+                            if (i._flatpickr) i._flatpickr.setDate(parseIndonesianDate(client[key]), true);
+                            else i.value = formatDateToIndonesian(client[key]);
+                        } else i.value = client[key];
+                    }
+                });
+                const iD = parseIndonesianDate(document.getElementById('tgl_lahir').value);
+                umurInput.value = client.tgl_lahir ? calculateAge(iD) : '';
+                motivasiValueSpan.textContent = tingkatMotivasiInput.value || '5';
+                calculateIMT();
+                updateSelectStyles();
             }
-            if (e.target.classList.contains('delete-client-btn')) {
-                deleteClient(e.target.dataset.id);
-            }
-        });
-        
-        // Listeners Modal Hapus
-        cancelDeleteBtn.addEventListener('click', () => {
-            deleteConfirmModal.style.display = 'none';
-            clientIdToDelete = null;
-        });
-        
-        confirmDeleteBtn.addEventListener('click', () => {
-            if (clientIdToDelete) {
-                clients = clients.filter(c => c.id !== clientIdToDelete);
+
+            function handleFormSubmit(e) {
+                e.preventDefault();
+                const id = clientIdInput.value;
+                const cD = {};
+                clientForm.querySelectorAll('input, select, textarea').forEach(i => {
+                    if (i.id) {
+                        if (i.id === 'tgl_lahir' || i.id === 'tanggal') cD[i.id] = parseIndonesianDate(i.value);
+                        else cD[i.id] = i.value;
+                    }
+                });
+                if (id) {
+                    const i = clients.findIndex(c => c.id === id);
+                    const existingFollowUps = clients[i].followUps || [];
+                    clients[i] = { ...clients[i],
+                        ...cD,
+                        followUps: existingFollowUps
+                    };
+                } else {
+                    cD.id = Date.now().toString();
+                    cD.followUps = [];
+                    clients.push(cD);
+                }
                 saveClients();
-                showScreen('list');
+                showScreen('data');
             }
-            deleteConfirmModal.style.display = 'none';
-            clientIdToDelete = null;
-        });
 
-        // Listeners Modal Fagerstrom
-        showFagerstromBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            fagerstromForm.reset();
-            fagerstromModal.style.display = 'flex';
-        });
-        closeFagerstromBtn.addEventListener('click', () => {
-            fagerstromModal.style.display = 'none';
-        });
-        fagerstromForm.addEventListener('submit', handleFagerstromSubmit);
-        
-        // Listener klik di luar modal untuk menutupnya
-        window.addEventListener('click', (event) => {
-            if (event.target == fagerstromModal) {
+            function showUserForm(userId = null) {
+                userForm.reset();
+                if (userId) {
+                    const user = users.find(u => u.id == userId);
+                    if (user) {
+                        userFormTitle.textContent = 'Ubah Pengguna';
+                        userIdInput.value = user.id;
+                        document.getElementById('new-username').value = user.username;
+                        newPasswordInput.value = user.password;
+                        document.getElementById('user-role').value = user.role;
+                    }
+                } else {
+                    userFormTitle.textContent = 'Tambah Pengguna';
+                    userIdInput.value = '';
+                }
+                newPasswordInput.type = 'password';
+                togglePasswordVisibility(false);
+                userFormModal.style.display = 'flex';
+            }
+
+            function handleUserFormSubmit(e) {
+                e.preventDefault();
+                const id = userIdInput.value;
+                const username = document.getElementById('new-username').value;
+                const password = newPasswordInput.value;
+                const role = document.getElementById('user-role').value;
+                if (id) {
+                    const index = users.findIndex(u => u.id == id);
+                    users[index] = { ...users[index],
+                        username,
+                        password,
+                        role
+                    };
+                } else {
+                    const newId = users.length > 0 ? Math.max(...users.map(u => u.id)) + 1 : 1;
+                    users.push({
+                        id: newId,
+                        username,
+                        password,
+                        role
+                    });
+                }
+                saveUsers();
+                renderUserTable();
+                userFormModal.style.display = 'none';
+            }
+
+            // NEW: Follow-up Form Handling
+            function openFollowUpModal(clientId, followUpId = null) {
+                followUpForm.reset();
+                document.getElementById('follow-up-client-id').value = clientId;
+                if (followUpId) {
+                    followUpFormTitle.textContent = 'Ubah Kunjungan Lanjutan';
+                    const client = clients.find(c => c.id === clientId);
+                    const followUp = client.followUps.find(fu => fu.id === followUpId);
+                    if (followUp) {
+                        document.getElementById('follow-up-id').value = followUp.id;
+                        document.getElementById('follow-up-date')._flatpickr.setDate(parseIndonesianDate(followUp.date), true);
+                        document.getElementById('follow-up-co').value = followUp.coLevel;
+                        document.getElementById('follow-up-status').value = followUp.status;
+                        document.getElementById('follow-up-notes').value = followUp.notes;
+                    }
+                } else {
+                    followUpFormTitle.textContent = 'Tambah Kunjungan Lanjutan';
+                    document.getElementById('follow-up-id').value = '';
+                    document.getElementById('follow-up-date')._flatpickr.setDate(new Date(), true);
+                }
+                updateSelectStyles();
+                followUpModal.style.display = 'flex';
+            }
+
+            function handleFollowUpSubmit(e) {
+                e.preventDefault();
+                const clientId = document.getElementById('follow-up-client-id').value;
+                const followUpId = document.getElementById('follow-up-id').value;
+
+                const clientIndex = clients.findIndex(c => c.id === clientId);
+                if (clientIndex === -1) return;
+
+                const followUpData = {
+                    id: followUpId || Date.now().toString(),
+                    date: parseIndonesianDate(document.getElementById('follow-up-date').value),
+                    coLevel: document.getElementById('follow-up-co').value,
+                    status: document.getElementById('follow-up-status').value,
+                    notes: document.getElementById('follow-up-notes').value,
+                };
+
+                if (!clients[clientIndex].followUps) {
+                    clients[clientIndex].followUps = [];
+                }
+
+                if (followUpId) {
+                    const fuIndex = clients[clientIndex].followUps.findIndex(fu => fu.id === followUpId);
+                    clients[clientIndex].followUps[fuIndex] = followUpData;
+                } else {
+                    clients[clientIndex].followUps.push(followUpData);
+                }
+
+                clients[clientIndex].followUps.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+                saveClients();
+                renderFollowUpHistory(clientId);
+                followUpModal.style.display = 'none';
+            }
+
+            function deleteItem(id, type, clientId = null) {
+                itemToDelete = {
+                    id,
+                    type,
+                    clientId
+                };
+                deleteConfirmModal.style.display = 'flex';
+            }
+
+            function handleFagerstromSubmit(e) {
+                e.preventDefault();
+                let s = 0;
+                new FormData(fagerstromForm).forEach(v => s += parseInt(v));
+                skorFagerstromInput.value = s;
                 fagerstromModal.style.display = 'none';
             }
-            if (event.target == deleteConfirmModal) {
-                deleteConfirmModal.style.display = 'none';
-                clientIdToDelete = null;
+
+            // --- REPORTING & EXPORT ---
+            function populateDateFilters() {
+                const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+                const currentYear = new Date().getFullYear();
+                for (let i = 0; i < 12; i++) {
+                    const option = document.createElement('option');
+                    option.value = (i + 1).toString().padStart(2, '0');
+                    option.textContent = months[i];
+                    reportMonthSelect.appendChild(option);
+                }
+                for (let i = currentYear; i >= 2020; i--) {
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = i;
+                    reportYearSelect.appendChild(option);
+                }
+                reportMonthSelect.value = (new Date().getMonth() + 1).toString().padStart(2, '0');
+                reportYearSelect.value = currentYear;
             }
+
+            function generateReport() {
+                const month = reportMonthSelect.value;
+                const year = reportYearSelect.value;
+                const monthName = reportMonthSelect.options[reportMonthSelect.selectedIndex].text;
+
+                const filteredClients = clients.filter(client => {
+                    if (!client.tanggal) return false;
+                    const [clientYear, clientMonth] = client.tanggal.split('-');
+                    return clientYear == year && clientMonth == month;
+                });
+
+                let reportHTML = `<div id="report-content-print">
+                <h2 class="text-xl font-bold text-center mb-2">Laporan Konseling UBM</h2>
+                <p class="text-center text-slate-600 mb-6">Periode Pendaftaran Awal: ${monthName} ${year}</p>`;
+
+                if (filteredClients.length === 0) {
+                    reportHTML += `<p class="text-center text-slate-500">Tidak ada data untuk periode yang dipilih.</p>`;
+                    printReportBtn.classList.add('hidden');
+                } else {
+                    reportHTML += `<div class="overflow-x-auto"><table class="w-full text-sm text-left whitespace-nowrap">
+                    <thead class="bg-slate-100">
+                        <tr>
+                            <th class="p-3 font-semibold">No.</th>
+                            <th class="p-3 font-semibold">Nama</th>
+                            <th class="p-3 font-semibold">Umur</th>
+                            <th class="p-3 font-semibold">Jenis Kelamin</th>
+                            <th class="p-3 font-semibold">Tgl Konseling Awal</th>
+                            <th class="p-3 font-semibold">Status Terkini</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+                    filteredClients.forEach((client, index) => {
+                        const clientAge = client.tgl_lahir ? `${calculateAge(client.tgl_lahir)}` : 'T/A';
+                        reportHTML += `
+                        <tr class="border-b">
+                            <td class="p-3">${index + 1}</td>
+                            <td class="p-3">${client.nama || '-'}</td>
+                            <td class="p-3">${clientAge}</td>
+                            <td class="p-3">${client.jenis_kelamin === 'L' ? 'Laki-laki' : (client.jenis_kelamin === 'P' ? 'Perempuan' : '-')}</td>
+                            <td class="p-3">${formatDateToIndonesian(client.tanggal) || '-'}</td>
+                            <td class="p-3">${getLatestStatus(client)}</td>
+                        </tr>`;
+                    });
+                    reportHTML += `</tbody></table></div>`;
+                    printReportBtn.classList.remove('hidden');
+                }
+                reportHTML += `</div>`;
+                reportContent.innerHTML = reportHTML;
+            }
+
+            function printReport() {
+                const printContent = document.getElementById('report-content-print').innerHTML;
+                const printWindow = window.open('', '', 'height=600,width=800');
+                printWindow.document.write('<html><head><title>Laporan Konseling UBM</title>');
+                printWindow.document.write('<script src="https://cdn.tailwindcss.com"><\/script>');
+                printWindow.document.write('<style>body { font-family: Inter, sans-serif; padding: 1rem; } table { width: 100%; border-collapse: collapse; font-size: 0.8rem;} th, td { border: 1px solid #ddd; padding: 6px; text-align: left;} thead { background-color: #f2f2f2; }</style>');
+                printWindow.document.write('</head><body>');
+                printWindow.document.write(printContent);
+                printWindow.document.write('</body></html>');
+                printWindow.document.close();
+                printWindow.focus();
+                setTimeout(() => {
+                    printWindow.print();
+                    printWindow.close();
+                }, 250);
+            }
+
+            function exportToExcel() {
+                const d = clients.map(c => ({
+                    'Nama': c.nama,
+                    'NIK': c.nik,
+                    'No. RM': c.no_rm,
+                    'Tempat Lahir': c.tempat_lahir,
+                    'Tanggal Lahir': formatDateToIndonesian(c.tgl_lahir),
+                    'Umur': c.tgl_lahir ? calculateAge(c.tgl_lahir) : '',
+                    'Alamat': c.alamat,
+                    'No. HP': c.no_hp,
+                    'Jenis Kelamin': c.jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan',
+                    'Tanggal Konseling': formatDateToIndonesian(c.tanggal),
+                    'Usia Mulai Merokok': c.usia_mulai_merokok,
+                    'Lama Merokok (Tahun)': c.lama_merokok,
+                    'Jumlah Rokok/Hari': c.jumlah_rokok_hari,
+                    'Skor Fagerström': c.skor_fagerstrom,
+                    'Kadar CO Awal (ppm)': c.kadar_co,
+                    'Status Terkini': getLatestStatus(c),
+                }));
+                const wS = XLSX.utils.json_to_sheet(d);
+                const wB = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wB, wS, "Data Klien");
+                XLSX.writeFile(wB, "Data-Klien-UBM.xlsx");
+            }
+
+            function exportToPDF() {
+                const {
+                    jsPDF
+                } = window.jspdf;
+                const doc = new jsPDF({
+                    o: 'l'
+                });
+                doc.text("Data Klien Konseling UBM", 14, 15);
+                doc.setFontSize(10);
+                doc.text(`Dicetak pada: ${new Date().toLocaleDateString('id-ID')}`, 14, 20);
+                const h = ["Nama", "Umur", "J. Kelamin", "Tgl Konseling", "Status Terkini"];
+                const r = clients.map(c => [c.nama || '-', c.tgl_lahir ? calculateAge(c.tgl_lahir) : 'T/A', c.jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan', formatDateToIndonesian(c.tanggal) || '-', getLatestStatus(c)]);
+                doc.autoTable({
+                    head: [h],
+                    body: r,
+                    startY: 25
+                });
+                doc.save('Data-Klien-UBM.pdf');
+            }
+
+            function togglePasswordVisibility(show) {
+                newPasswordInput.type = show ? 'text' : 'password';
+                eyeIcon.classList.toggle('hidden', show);
+                eyeSlashIcon.classList.toggle('hidden', !show);
+            }
+
+            // --- Event Listeners ---
+            loginForm.addEventListener('submit', handleLogin);
+            logoutBtn.addEventListener('click', handleLogout);
+            addNewClientBtn.addEventListener('click', () => showClientForm());
+            addNewUserBtn.addEventListener('click', () => showUserForm());
+            navDashboard.addEventListener('click', (e) => {
+                e.preventDefault();
+                showScreen('dashboard');
+            });
+            navDataClients.addEventListener('click', (e) => {
+                e.preventDefault();
+                showScreen('data');
+            });
+            navAdmin.addEventListener('click', (e) => {
+                e.preventDefault();
+                showScreen('admin');
+            });
+            navLaporan.addEventListener('click', (e) => {
+                e.preventDefault();
+                showScreen('report');
+            });
+            backToListBtn.addEventListener('click', () => showScreen('data'));
+            clientForm.addEventListener('submit', handleFormSubmit);
+            userForm.addEventListener('submit', handleUserFormSubmit);
+            beratBadanInput.addEventListener('input', calculateIMT);
+            tinggiBadanInput.addEventListener('input', calculateIMT);
+            tingkatMotivasiInput.addEventListener('input', () => {
+                motivasiValueSpan.textContent = tingkatMotivasiInput.value;
+            });
+            clientTableBody.addEventListener('click', (e) => {
+                const b = e.target.closest('button');
+                if (b?.classList.contains('edit-client-btn')) showClientForm(b.dataset.id);
+                if (b?.classList.contains('delete-client-btn')) deleteItem(b.dataset.id, 'client');
+            });
+            userTableBody.addEventListener('click', (e) => {
+                const b = e.target.closest('button');
+                if (b?.classList.contains('edit-user-btn')) showUserForm(b.dataset.id);
+                if (b?.classList.contains('delete-user-btn')) deleteItem(b.dataset.id, 'user');
+            });
+            searchInput.addEventListener('keyup', (e) => {
+                const s = e.target.value.toLowerCase();
+                renderClientTable(clients.filter(c => c.nama.toLowerCase().includes(s)));
+            });
+            exportPdfBtn.addEventListener('click', exportToPDF);
+            exportExcelBtn.addEventListener('click', exportToExcel);
+            generateReportBtn.addEventListener('click', generateReport);
+            printReportBtn.addEventListener('click', printReport);
+            cancelDeleteBtn.addEventListener('click', () => {
+                deleteConfirmModal.style.display = 'none';
+                itemToDelete = {
+                    id: null,
+                    type: null,
+                    clientId: null
+                };
+            });
+            confirmDeleteBtn.addEventListener('click', () => {
+                if (itemToDelete.id && itemToDelete.type) {
+                    if (itemToDelete.type === 'client') {
+                        clients = clients.filter(c => c.id !== itemToDelete.id);
+                        saveClients();
+                        showScreen('data');
+                    } else if (itemToDelete.type === 'user') {
+                        const user = users.find(u => u.id == itemToDelete.id);
+                        if (user && user.username === 'admin') {
+                            alert('Pengguna admin tidak dapat dihapus.');
+                        } else {
+                            users = users.filter(u => u.id != itemToDelete.id);
+                            saveUsers();
+                            showScreen('admin');
+                        }
+                    } else if (itemToDelete.type === 'followUp') {
+                        const clientIndex = clients.findIndex(c => c.id === itemToDelete.clientId);
+                        if (clientIndex > -1) {
+                            clients[clientIndex].followUps = clients[clientIndex].followUps.filter(fu => fu.id !== itemToDelete.id);
+                            saveClients();
+                            renderFollowUpHistory(itemToDelete.clientId);
+                        }
+                    }
+                }
+                deleteConfirmModal.style.display = 'none';
+                itemToDelete = {
+                    id: null,
+                    type: null,
+                    clientId: null
+                };
+            });
+            showFagerstromBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                fagerstromForm.reset();
+                fagerstromModal.style.display = 'flex';
+            });
+            closeFagerstromBtn.addEventListener('click', () => fagerstromModal.style.display = 'none');
+            closeUserFormBtn.addEventListener('click', () => userFormModal.style.display = 'none');
+            fagerstromForm.addEventListener('submit', handleFagerstromSubmit);
+            togglePasswordVisibilityBtn.addEventListener('click', () => togglePasswordVisibility(newPasswordInput.type === 'password'));
+
+            // NEW: Follow-up Listeners
+            addFollowUpBtn.addEventListener('click', () => openFollowUpModal(clientIdInput.value));
+            closeFollowUpBtn.addEventListener('click', () => followUpModal.style.display = 'none');
+            followUpForm.addEventListener('submit', handleFollowUpSubmit);
+            followUpHistoryBody.addEventListener('click', (e) => {
+                const button = e.target.closest('button');
+                if (!button) return;
+                const {
+                    clientId,
+                    followUpId
+                } = button.dataset;
+                if (button.classList.contains('edit-follow-up-btn')) {
+                    openFollowUpModal(clientId, followUpId);
+                } else if (button.classList.contains('delete-follow-up-btn')) {
+                    deleteItem(followUpId, 'followUp', clientId);
+                }
+            });
+
+            window.addEventListener('click', (event) => {
+                if (event.target == fagerstromModal) fagerstromModal.style.display = 'none';
+                if (event.target == deleteConfirmModal) {
+                    deleteConfirmModal.style.display = 'none';
+                    itemToDelete = {
+                        id: null,
+                        type: null,
+                        clientId: null
+                    };
+                }
+                if (event.target == userFormModal) userFormModal.style.display = 'none';
+                if (event.target == followUpModal) followUpModal.style.display = 'none';
+            });
+
+            initializeApp();
         });
-        
-        initializeApp();
-    });
     </script>
 </body>
+
 </html>
+
+
 
 
