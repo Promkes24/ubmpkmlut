@@ -22,15 +22,15 @@
         body {
             font-family: 'Inter', sans-serif;
         }
-
+        
         .font-montserrat {
             font-family: 'Montserrat', sans-serif;
         }
-
+        
         .fade-in {
             animation: fadeIn 0.5s ease-in-out;
         }
-
+        
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -41,7 +41,7 @@
                 transform: translateY(0);
             }
         }
-
+        
         .modal {
             display: none;
             position: fixed;
@@ -55,7 +55,7 @@
             align-items: center;
             justify-content: center;
         }
-
+        
         .modal-content {
             background-color: #fefefe;
             margin: auto;
@@ -65,7 +65,7 @@
             max-width: 500px;
             animation: fadeIn 0.3s;
         }
-
+        
         .close-btn {
             color: #aaa;
             float: right;
@@ -73,7 +73,7 @@
             font-weight: bold;
             cursor: pointer;
         }
-
+        
         .form-section {
             background-color: #f8fafc;
             border: 1px solid #e2e8f0;
@@ -81,7 +81,7 @@
             padding: 1.5rem;
             margin-bottom: 1.5rem;
         }
-
+        
         .form-section h3 {
             font-size: 1.125rem;
             font-weight: 600;
@@ -90,11 +90,11 @@
             border-bottom: 1px solid #cbd5e1;
             padding-bottom: 0.5rem;
         }
-
+        
         .form-group {
             margin-bottom: 1rem;
         }
-
+        
         .form-group label {
             display: block;
             font-size: 0.875rem;
@@ -102,7 +102,7 @@
             color: #475569;
             margin-bottom: 0.25rem;
         }
-
+        
         .form-group input,
         .form-group select,
         .form-group textarea {
@@ -113,29 +113,29 @@
             font-size: 0.875rem;
             box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
         }
-
+        
         select {
             color: #1e293b;
         }
-
+        
         select.placeholder-style {
             color: #9ca3af;
         }
-
+        
         select option {
             color: #1e293b;
         }
-
+        
         #app-container {
             display: flex;
             height: 100vh;
             width: 100vw;
         }
-
+        
         main {
             height: 100vh;
         }
-
+        
         @media print {
             body * {
                 visibility: hidden;
@@ -1349,8 +1349,7 @@
                 const printContent = document.getElementById('report-content-print').innerHTML;
                 const printWindow = window.open('', '', 'height=600,width=800');
                 printWindow.document.write('<html><head><title>Laporan Konseling UBM</title>');
-                printWindow.document.write('<script src="https://cdn.tailwindcss.com"><\/script>');
-                printWindow.document.write('<style>body { font-family: Inter, sans-serif; padding: 1rem; } table { width: 100%; border-collapse: collapse; font-size: 0.8rem;} th, td { border: 1px solid #ddd; padding: 6px; text-align: left;} thead { background-color: #f2f2f2; }</style>');
+                printWindow.document.write('<style>body { font-family: Inter, sans-serif; padding: 1rem; } h2 { text-align: center; font-size: 1.25rem; font-weight: bold; margin-bottom: 0.5rem; } p { text-align: center; color: #475569; margin-bottom: 1.5rem; } table { width: 100%; border-collapse: collapse; font-size: 0.8rem;} th, td { border: 1px solid #ddd; padding: 6px; text-align: left;} thead { background-color: #f2f2f2; }</style>');
                 printWindow.document.write('</head><body>');
                 printWindow.document.write(printContent);
                 printWindow.document.write('</body></html>');
