@@ -135,20 +135,48 @@
         main {
             height: 100vh;
         }
-
+        
+        /* Menyembunyikan area cetak di tampilan layar normal */
+        #report-content-print {
+            display: none;
+        }
+        
+        /* Aturan CSS untuk mode cetak/print */
         @media print {
+            /* Sembunyikan semua elemen di body secara default */
             body * {
                 visibility: hidden;
             }
+            
+            /* Tampilkan hanya area cetak dan semua elemen di dalamnya */
             #report-content-print,
             #report-content-print * {
                 visibility: visible;
             }
+            
+            /* Posisikan area cetak agar memenuhi seluruh halaman */
             #report-content-print {
+                display: block !important;
                 position: absolute;
                 left: 0;
                 top: 0;
                 width: 100%;
+                padding: 1rem;
+                border: none;
+                box-shadow: none;
+            }
+            
+            /* Pastikan background pada header tabel ikut tercetak */
+            #report-content-print thead {
+                background-color: #f3f4f6 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            /* Hapus margin dan padding dari elemen pembungkus */
+            body, main, #report-screen, #report-content {
+                padding: 0 !important;
+                margin: 0 !important;
             }
         }
     </style>
@@ -218,7 +246,7 @@
                 </a>
                 <a href="#" id="nav-admin" class="flex items-center space-x-3 p-2 rounded-lg transition-all duration-200 transform hidden hover:shadow-lg hover:-translate-y-px">
                      <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                         <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
                     </svg>
                     <span>Admin</span>
                 </a>
@@ -315,7 +343,7 @@
                     <p class="text-center text-slate-500">Pilih bulan dan tahun untuk menampilkan laporan.</p>
                 </div>
                 <!-- Printable area -->
-                <div id="report-content-print" class="hidden"></div>
+                <div id="report-content-print"></div>
             </div>
 
             <!-- Layar Admin -->
@@ -581,7 +609,7 @@
                     <div>
                         <label class="font-semibold">4. Apakah Anda merokok lebih banyak dalam dua jam pertama hari Anda?</label>
                         <div><label><input type="radio" name="q4" value="1" required> Ya</label></div>
-                        <div><label><input ubiquity="265" type="radio" name="q4" value="0"> Tidak</label></div>
+                        <div><label><input type="radio" name="q4" value="0"> Tidak</label></div>
                     </div>
                     <div>
                         <label class="font-semibold">5. Apakah Anda kesulitan menahan merokok di tempat yang dilarang?</label>
@@ -695,6 +723,7 @@
             const reportYearSelect = document.getElementById('report-year');
             const generateReportBtn = document.getElementById('generate-report-btn');
             const reportContent = document.getElementById('report-content');
+            const reportContentPrint = document.getElementById('report-content-print');
 
             const userFormModal = document.getElementById('user-form-modal');
             const userForm = document.getElementById('user-form');
@@ -1305,30 +1334,29 @@
                     const [clientYear, clientMonth] = client.tanggal.split('-');
                     return clientYear == year && clientMonth == month;
                 });
-
-                let reportHTML = `<div id="report-content-print">
-                <h2 class="text-xl font-bold text-center mb-2">Laporan Konseling UBM</h2>
-                <p class="text-center text-slate-600 mb-6">Periode Pendaftaran Awal: ${monthName} ${year}</p>`;
-
+                
+                let reportInnerHTML = `<h2 class="text-xl font-bold text-center mb-2">Laporan Konseling UBM</h2>
+                                     <p class="text-center text-slate-600 mb-6">Periode Pendaftaran Awal: ${monthName} ${year}</p>`;
+                
                 if (filteredClients.length === 0) {
-                    reportHTML += `<p class="text-center text-slate-500">Tidak ada data untuk periode yang dipilih.</p>`;
+                    reportInnerHTML += `<p class="text-center text-slate-500">Tidak ada data untuk periode yang dipilih.</p>`;
                     printReportBtn.classList.add('hidden');
                 } else {
-                    reportHTML += `<div class="overflow-x-auto"><table class="w-full text-sm text-left whitespace-nowrap">
-                    <thead class="bg-slate-100">
-                        <tr>
-                            <th class="p-3 font-semibold">No.</th>
-                            <th class="p-3 font-semibold">Nama</th>
-                            <th class="p-3 font-semibold">Umur</th>
-                            <th class="p-3 font-semibold">Jenis Kelamin</th>
-                            <th class="p-3 font-semibold">Tgl Konseling Awal</th>
-                            <th class="p-3 font-semibold">Status Terkini</th>
-                        </tr>
-                    </thead>
-                    <tbody>`;
+                    let tableHTML = `<div class="overflow-x-auto"><table class="w-full text-sm text-left whitespace-nowrap">
+                        <thead class="bg-slate-100">
+                            <tr>
+                                <th class="p-3 font-semibold">No.</th>
+                                <th class="p-3 font-semibold">Nama</th>
+                                <th class="p-3 font-semibold">Umur</th>
+                                <th class="p-3 font-semibold">Jenis Kelamin</th>
+                                <th class="p-3 font-semibold">Tgl Konseling Awal</th>
+                                <th class="p-3 font-semibold">Status Terkini</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
                     filteredClients.forEach((client, index) => {
                         const clientAge = client.tgl_lahir ? `${calculateAge(client.tgl_lahir)}` : 'T/A';
-                        reportHTML += `
+                        tableHTML += `
                         <tr class="border-b">
                             <td class="p-3">${index + 1}</td>
                             <td class="p-3">${client.nama || '-'}</td>
@@ -1338,28 +1366,19 @@
                             <td class="p-3">${getLatestStatus(client)}</td>
                         </tr>`;
                     });
-                    reportHTML += `</tbody></table></div>`;
+                    tableHTML += `</tbody></table></div>`;
+                    reportInnerHTML += tableHTML;
                     printReportBtn.classList.remove('hidden');
                 }
-                reportHTML += `</div>`;
-                reportContent.innerHTML = reportHTML;
+                
+                // Populate both the on-screen container and the hidden print container
+                reportContent.innerHTML = reportInnerHTML;
+                reportContentPrint.innerHTML = reportInnerHTML;
             }
 
             function printReport() {
-                const printContent = document.getElementById('report-content-print').innerHTML;
-                const printWindow = window.open('', '', 'height=600,width=800');
-                printWindow.document.write('<html><head><title>Laporan Konseling UBM</title>');
-                printWindow.document.write('<script src="https://cdn.tailwindcss.com"><\/script>');
-                printWindow.document.write('<style>body { font-family: Inter, sans-serif; padding: 1rem; } table { width: 100%; border-collapse: collapse; font-size: 0.8rem;} th, td { border: 1px solid #ddd; padding: 6px; text-align: left;} thead { background-color: #f2f2f2; }</style>');
-                printWindow.document.write('</head><body>');
-                printWindow.document.write(printContent);
-                printWindow.document.write('</body></html>');
-                printWindow.document.close();
-                printWindow.focus();
-                setTimeout(() => {
-                    printWindow.print();
-                    printWindow.close();
-                }, 250);
+                // This triggers the browser's print dialog and uses the @media print CSS rules.
+                window.print();
             }
 
             function exportToExcel() {
@@ -1547,4 +1566,3 @@
 </body>
 
 </html>
-
