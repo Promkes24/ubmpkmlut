@@ -256,30 +256,29 @@
             <div id="client-data-screen" class="hidden fade-in">
                 <div class="flex flex-wrap gap-4 justify-between items-center mb-8">
                     <h1 class="text-3xl font-bold text-slate-800">Data Klien</h1>
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <!-- NEW FILTERS -->
-                        <select id="filter-month" class="w-auto p-2 border border-slate-300 rounded-md shadow-sm text-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500">
-                            <option value="">Semua Bulan</option>
-                            <!-- Opsi bulan akan di-render oleh JS -->
-                        </select>
-                        <select id="filter-year" class="w-auto p-2 border border-slate-300 rounded-md shadow-sm text-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500">
-                            <option value="">Semua Tahun</option>
-                            <!-- Opsi tahun akan di-render oleh JS -->
-                        </select>
-                        <button id="clear-filter-btn" class="bg-slate-500 hover:bg-slate-600 text-white font-bold py-2 px-3 text-sm rounded-lg transition duration-300">
-                            Reset Filter
-                        </button>
-                        
-                        <!-- EXISTING SEARCH -->
-                        <div class="flex items-center border border-slate-300 rounded-md bg-white shadow-sm focus-within:border-teal-500 focus-within:ring-1 focus-within:ring-teal-500">
-                            <span class="pl-3 pr-2 text-slate-400">
-                               <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                            </span>
-                            <input type="text" id="search-input" placeholder="Cari nama klien..." class="w-full h-full p-2 border-none focus:ring-0 rounded-r-md text-sm">
+                    <div class="flex items-end gap-2 flex-wrap">
+                        <!-- Search Input -->
+                        <div class="flex-grow min-w-[200px]">
+                            <label for="search-input" class="text-sm font-medium text-slate-600">Cari Nama</label>
+                            <div class="mt-1 flex items-center border border-slate-300 rounded-md bg-white shadow-sm focus-within:border-teal-500 focus-within:ring-1 focus-within:ring-teal-500">
+                                <span class="pl-3 pr-2 text-slate-400">
+                                   <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                </span>
+                                <input type="text" id="search-input" placeholder="Cari nama klien..." class="w-full h-full p-2 border-none focus:ring-0 rounded-r-md text-sm">
+                            </div>
                         </div>
-                        
-                        <!-- EXISTING ADD BUTTON -->
-                        <button id="add-new-client-btn" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-3 text-sm rounded-lg transition duration-300 whitespace-nowrap">
+                        <!-- Filter Bulan -->
+                        <div class="flex-grow-0">
+                            <label for="filter-month" class="text-sm font-medium text-slate-600">Bulan</label>
+                            <select id="filter-month" class="mt-1 form-group !mb-0 !p-2 !h-[42px]"></select>
+                        </div>
+                        <!-- Filter Tahun -->
+                        <div class="flex-grow-0">
+                            <label for="filter-year" class="text-sm font-medium text-slate-600">Tahun</label>
+                            <select id="filter-year" class="mt-1 form-group !mb-0 !p-2 !h-[42px]"></select>
+                        </div>
+                        <!-- Tombol Tambah Klien -->
+                        <button id="add-new-client-btn" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-3 text-sm rounded-lg transition duration-300 whitespace-nowrap h-[42px]">
                             + Tambah Klien
                         </button>
                     </div>
@@ -597,7 +596,7 @@
                     <div>
                         <label class="font-semibold">4. Apakah Anda merokok lebih banyak dalam dua jam pertama hari Anda?</label>
                         <div><label><input type="radio" name="q4" value="1" required> Ya</label></div>
-                        <div><label ubiquity="265" type="radio" name="q4" value="0"> Tidak</label></div>
+                        <div><label><input type="radio" name="q4" value="0"> Tidak</label></div>
                     </div>
                     <div>
                         <label class="font-semibold">5. Apakah Anda kesulitan menahan merokok di tempat yang dilarang?</label>
@@ -703,12 +702,11 @@
             const navDataClients = document.getElementById('nav-data-clients');
             const navAdmin = document.getElementById('nav-admin');
             const navLaporan = document.getElementById('nav-laporan');
-            const searchInput = document.getElementById('search-input');
             
-            // NEW: Filter elements
-            const filterMonthSelect = document.getElementById('filter-month');
-            const filterYearSelect = document.getElementById('filter-year');
-            const clearFilterBtn = document.getElementById('clear-filter-btn');
+            // Filter Data Klien
+            const searchInput = document.getElementById('search-input');
+            const filterMonth = document.getElementById('filter-month');
+            const filterYear = document.getElementById('filter-year');
 
             const exportPdfBtn = document.getElementById('export-pdf-btn');
             const exportExcelBtn = document.getElementById('export-excel-btn');
@@ -750,6 +748,9 @@
             let users = [];
             let statusChart;
             let genderChart;
+            // --- PERBAIKAN FAGERSTROM: Tambahkan variabel sementara ---
+            let currentFagerstromAnswers = {}; 
+            // --------------------------------------------------------
             let itemToDelete = {
                 id: null,
                 type: null,
@@ -757,12 +758,15 @@
             };
 
             Chart.register(ChartDataLabels);
+            
+            const MONTHS = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
 
             // --- Inisialisasi Flatpickr ---
             flatpickr("#tgl_lahir", {
                 dateFormat: "d/m/Y",
                 allowInput: true,
                 onChange: (selectedDates, dateStr) => {
+                    // Panggil parseIndonesianDate untuk konversi DD/MM/YYYY -> YYYY-MM-DD
                     umurInput.value = calculateAge(parseIndonesianDate(dateStr));
                 }
             });
@@ -799,8 +803,8 @@
                 else showLogin();
                 clientForm.querySelectorAll('select').forEach(select => select.addEventListener('change', updateSelectStyles));
                 document.getElementById('follow-up-status').addEventListener('change', updateSelectStyles);
-                populateDateFilters();
-                populateClientDateFilters(); // NEW: Panggil fungsi untuk mengisi filter klien
+                populateDateFilters(reportMonthSelect, reportYearSelect);
+                populateDateFilters(filterMonth, filterYear, true); // Tambahkan filter untuk data klien
             }
 
             function showLogin() {
@@ -856,7 +860,7 @@
                     setActiveNav('nav-dashboard');
                 } else if (screen === 'data') {
                     clientDataScreen.style.display = 'block';
-                    renderClientTable();
+                    applyClientFilters(); // Gunakan fungsi filter baru
                     setActiveNav('nav-data-clients');
                 } else if (screen === 'report') {
                     reportScreen.style.display = 'block';
@@ -908,7 +912,10 @@
             function calculateAge(dateString) {
                 if (!dateString) return '';
                 const today = new Date();
-                const birthDate = new Date(dateString);
+                // Pastikan dateString dalam format YYYY-MM-DD
+                const birthDate = new Date(dateString); 
+                if (isNaN(birthDate.getTime())) return ''; // Handle invalid date
+                
                 let age = today.getFullYear() - birthDate.getFullYear();
                 const m = today.getMonth() - birthDate.getMonth();
                 if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
@@ -916,15 +923,23 @@
             }
 
             function formatDateToIndonesian(dateString) {
+                // Input: YYYY-MM-DD
                 if (!dateString || !dateString.includes('-')) return dateString;
-                const [year, month, day] = dateString.split('-');
-                return `${day}/${month}/${year}`;
+                const parts = dateString.split('-');
+                if (parts.length !== 3) return dateString;
+                const [year, month, day] = parts;
+                return `${day}/${month}/${year}`; // Output: DD/MM/YYYY
             }
 
             function parseIndonesianDate(dateString) {
+                // Input: DD/MM/YYYY
                 if (!dateString || !dateString.includes('/')) return dateString;
-                const [day, month, year] = dateString.split('/');
-                if (day && month && year && year.length === 4) return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+                const parts = dateString.split('/');
+                if (parts.length !== 3) return dateString;
+                const [day, month, year] = parts;
+                if (day && month && year && year.length === 4) {
+                    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`; // Output: YYYY-MM-DD
+                }
                 return '';
             }
 
@@ -939,50 +954,63 @@
 
             function getLatestStatus(client) {
                 if (client.followUps && client.followUps.length > 0) {
-                    const sortedFollowUps = [...client.followUps].sort((a, b) => new Date(a.date) - new Date(b.date));
-                    return sortedFollowUps[sortedFollowUps.length - 1].status;
+                    // followUps sudah diurutkan saat menyimpan, jadi ambil yang terakhir
+                    return client.followUps[client.followUps.length - 1].status;
                 }
                 return client.tindak_lanjut || 'Proses Berjalan';
             }
 
             // --- RENDERING ---
-            function renderClientTable() { // MODIFIED: Hapus parameter
-                let filteredClients = [...clients]; // MODIFIED: Mulai dengan semua klien
-                
-                // Get filter values
-                const month = filterMonthSelect.value;
-                const year = filterYearSelect.value;
+
+            // Fungsi baru untuk filter dan render tabel klien
+            function applyClientFilters() {
                 const searchTerm = searchInput.value.toLowerCase();
+                const month = filterMonth.value;
+                const year = filterYear.value;
 
-                // 1. Filter by Month
-                if (month) {
-                    filteredClients = filteredClients.filter(client => {
-                        return client.tanggal && client.tanggal.split('-')[1] === month;
-                    });
-                }
+                let filteredClients = [...clients];
 
-                // 2. Filter by Year
-                if (year) {
-                    filteredClients = filteredClients.filter(client => {
-                        return client.tanggal && client.tanggal.split('-')[0] === year;
-                    });
-                }
-                
-                // 3. Filter by Search Term (Nama)
+                // 1. Filter berdasarkan pencarian nama
                 if (searchTerm) {
-                    filteredClients = filteredClients.filter(c => c.nama.toLowerCase().includes(searchTerm));
+                    filteredClients = filteredClients.filter(c => c.nama && c.nama.toLowerCase().includes(searchTerm));
                 }
 
-                // 4. Sort by Tanggal Konseling (Terbaru dulu)
-                filteredClients.sort((a, b) => (b.tanggal || '').localeCompare(a.tanggal || ''));
+                // 2. Filter berdasarkan bulan (jika bukan "Semua")
+                if (month !== 'all') {
+                    filteredClients = filteredClients.filter(client => {
+                        if (!client.tanggal) return false;
+                        const [clientYear, clientMonth] = client.tanggal.split('-');
+                        return clientMonth == month;
+                    });
+                }
                 
-                // --- Bagian rendering dimulai dari sini ---
+                // 3. Filter berdasarkan tahun (jika bukan "Semua")
+                if (year !== 'all') {
+                     filteredClients = filteredClients.filter(client => {
+                        if (!client.tanggal) return false;
+                        const [clientYear] = client.tanggal.split('-');
+                        return clientYear == year;
+                    });
+                }
+
+                // 4. Urutkan berdasarkan tanggal konseling (terbaru dulu)
+                filteredClients.sort((a, b) => {
+                    const dateA = a.tanggal ? new Date(a.tanggal) : new Date(0);
+                    const dateB = b.tanggal ? new Date(b.tanggal) : new Date(0);
+                    return dateB - dateA; // Terbaru di atas
+                });
+                
+                renderClientTable(filteredClients);
+            }
+
+            function renderClientTable(clientsToRender) {
                 clientTableBody.innerHTML = '';
-                if (filteredClients.length === 0) {
+                if (clientsToRender.length === 0) {
                     clientTableBody.innerHTML = `<tr><td colspan="7" class="text-center p-4 text-slate-500 italic">Data klien tidak ditemukan.</td></tr>`;
                     return;
                 }
-                filteredClients.forEach((client, index) => {
+                clientsToRender.forEach((client, index) => {
+                    // Gunakan parseIndonesianDate untuk memastikan formatnya YYYY-MM-DD
                     const clientAge = client.tgl_lahir ? `${calculateAge(client.tgl_lahir)}` : 'T/A';
                     const latestStatus = getLatestStatus(client);
                     const row = document.createElement('tr');
@@ -1022,6 +1050,7 @@
                     return;
                 }
 
+                // Urutkan sekali lagi untuk tampilan (meskipun sudah diurutkan saat simpan)
                 const sortedFollowUps = [...client.followUps].sort((a, b) => new Date(b.date) - new Date(a.date));
 
                 sortedFollowUps.forEach((fu, index) => {
@@ -1144,44 +1173,68 @@
             }
 
             // --- FORM HANDLING ---
+            
+            // --- PERBAIKAN FAGERSTROM: Logika diubah ---
             function showClientForm(clientId = null) {
                 clientForm.reset();
                 motivasiValueSpan.textContent = '5';
+                
                 if (clientId) {
+                    // Mengedit klien yang sudah ada
                     const c = clients.find(cl => cl.id === clientId);
                     if (c) {
                         formTitle.textContent = 'Ubah Data Klien';
                         populateForm(c);
+                        
+                        // Muat jawaban Fagerstrom yang ada
+                        if (c.fagerstromAnswers) {
+                            currentFagerstromAnswers = { ...c.fagerstromAnswers };
+                        } else {
+                            // Klien ada tapi belum pernah isi, pastikan kosong
+                            currentFagerstromAnswers = {}; 
+                        }
+                        
                         renderFollowUpHistory(clientId);
                     }
                 } else {
+                    // Menambah klien baru
                     formTitle.textContent = 'Tambah Klien Baru';
                     clientIdInput.value = '';
+                    
+                    // Pastikan jawaban Fagerstrom kosong untuk klien baru
+                    currentFagerstromAnswers = {}; 
+                    
                     renderFollowUpHistory(null);
                 }
+                
                 updateSelectStyles();
                 showScreen('form');
             }
+            // --- AKHIR PERBAIKAN FAGERSTROM ---
 
             function populateForm(client) {
-                clientIdInput.value = client.id || '';
-                
+                // Selalu atur ID yang benar di awal
+                clientIdInput.value = client.id;
+
                 Object.keys(client).forEach(key => {
-                    if (key === 'client-id') return;
+                    // Abaikan properti 'client-id' yang salah jika ada
+                    if (key === 'client-id') return; 
                     
                     const i = document.getElementById(key);
                     if (i) {
                         if (key === 'tgl_lahir' || key === 'tanggal') {
                             if (i._flatpickr) {
-                                const indonesianDate = formatDateToIndonesian(client[key]);       
+                                // --- PERBAIKAN BUG TANGGAL (dari user sebelumnya) ---
+                                // Ubah "YYYY-MM-DD" ke "DD/MM/YYYY" sebelum memuat
+                                const indonesianDate = formatDateToIndonesian(client[key]);
                                 i._flatpickr.setDate(indonesianDate || "", true);
+                                // -------------------------------------------------
                             }
                             else i.value = formatDateToIndonesian(client[key]); 
                         } else i.value = client[key];
                     }
                 });
                 
-
                 motivasiValueSpan.textContent = tingkatMotivasiInput.value || '5';
                 calculateIMT();
                 updateSelectStyles();
@@ -1189,31 +1242,42 @@
 
             function handleFormSubmit(e) {
                 e.preventDefault();
-                const id = clientIdInput.value; 
+                const id = clientIdInput.value;
                 const cD = {};
                 clientForm.querySelectorAll('input, select, textarea').forEach(i => {
-                    if (i.id && i.id !== 'client-id') {
-                        if (i.id === 'tgl_lahir' || i.id === 'tanggal') cD[i.id] = parseIndonesianDate(i.value);
-                        else cD[i.id] = i.value;
+                    // Jangan simpan 'client-id'
+                    if (i.id && i.id !== 'client-id') { 
+                        if (i.id === 'tgl_lahir' || i.id === 'tanggal') {
+                            // Konversi "DD/MM/YYYY" ke "YYYY-MM-DD" untuk penyimpanan
+                            cD[i.id] = parseIndonesianDate(i.value);
+                        } else {
+                            cD[i.id] = i.value;
+                        }
                     }
                 });
+                
+                // --- PERBAIKAN FAGERSTROM: Gabungkan jawaban ---
+                cD.fagerstromAnswers = { ...currentFagerstromAnswers };
+                // ----------------------------------------------
 
                 if (id) {
                     const i = clients.findIndex(c => c.id === id);
-                    if (i > -1) { 
-                        const existingFollowUps = clients[i].followUps || [];
-                        clients[i] = {
-                            ...clients[i], 
-                            ...cD, 
-                            followUps: existingFollowUps
-                        };
-                    }
+                    const existingFollowUps = clients[i].followUps || [];
+                    clients[i] = { 
+                        ...clients[i], // Pertahankan data lama (terutama ID)
+                        ...cD, // Timpa dengan data form baru
+                        id: id, // Pastikan ID tidak tertimpa
+                        followUps: existingFollowUps
+                    };
                 } else {
                     cD.id = Date.now().toString();
                     cD.followUps = [];
                     clients.push(cD);
                 }
                 saveClients();
+                // --- PERBAIKAN FAGERSTROM: Reset setelah simpan ---
+                currentFagerstromAnswers = {};
+                // ------------------------------------------------
                 showScreen('data');
             }
 
@@ -1274,7 +1338,8 @@
                     const followUp = client.followUps.find(fu => fu.id === followUpId);
                     if (followUp) {
                         document.getElementById('follow-up-id').value = followUp.id;
-                        document.getElementById('follow-up-date')._flatpickr.setDate(parseIndonesianDate(followUp.date), true);
+                        // Ubah "YYYY-MM-DD" ke "DD/MM/YYYY" untuk flatpickr
+                        document.getElementById('follow-up-date')._flatpickr.setDate(formatDateToIndonesian(followUp.date), true);
                         document.getElementById('follow-up-co').value = followUp.coLevel;
                         document.getElementById('follow-up-status').value = followUp.status;
                         document.getElementById('follow-up-notes').value = followUp.notes;
@@ -1298,6 +1363,7 @@
 
                 const followUpData = {
                     id: followUpId || Date.now().toString(),
+                    // Konversi "DD/MM/YYYY" ke "YYYY-MM-DD" untuk penyimpanan
                     date: parseIndonesianDate(document.getElementById('follow-up-date').value),
                     coLevel: document.getElementById('follow-up-co').value,
                     status: document.getElementById('follow-up-status').value,
@@ -1315,6 +1381,7 @@
                     clients[clientIndex].followUps.push(followUpData);
                 }
 
+                // Urutkan berdasarkan tanggal (terlama ke terbaru)
                 clients[clientIndex].followUps.sort((a, b) => new Date(a.date) - new Date(b.date));
 
                 saveClients();
@@ -1334,54 +1401,58 @@
             function handleFagerstromSubmit(e) {
                 e.preventDefault();
                 let s = 0;
-                new FormData(fagerstromForm).forEach(v => s += parseInt(v));
+                // --- PERBAIKAN FAGERSTROM: Simpan jawaban ---
+                currentFagerstromAnswers = {}; // Kosongkan dulu
+                const formData = new FormData(fagerstromForm);
+                formData.forEach((value, key) => {
+                    s += parseInt(value);
+                    currentFagerstromAnswers[key] = value; // Simpan jawaban
+                });
+                // ------------------------------------------
                 skorFagerstromInput.value = s;
                 fagerstromModal.style.display = 'none';
             }
 
             // --- REPORTING & EXPORT ---
-            function populateDateFilters() {
-                const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-                const currentYear = new Date().getFullYear();
-                for (let i = 0; i < 12; i++) {
-                    const option = document.createElement('option');
-                    option.value = (i + 1).toString().padStart(2, '0');
-                    option.textContent = months[i];
-                    reportMonthSelect.appendChild(option);
-                }
-                for (let i = currentYear; i >= 2020; i--) {
-                    const option = document.createElement('option');
-                    option.value = i;
-                    option.textContent = i;
-                    reportYearSelect.appendChild(option);
-                }
-                reportMonthSelect.value = (new Date().getMonth() + 1).toString().padStart(2, '0');
-                reportYearSelect.value = currentYear;
-            }
+            function populateDateFilters(monthSelect, yearSelect, useAllOption = false) {
+                monthSelect.innerHTML = '';
+                yearSelect.innerHTML = '';
 
-            // NEW: Fungsi untuk mengisi filter bulan/tahun di halaman Data Klien
-            function populateClientDateFilters() {
-                const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-                const currentYear = new Date().getFullYear();
-                
-                // Hapus opsi lama jika ada
-                filterMonthSelect.innerHTML = '<option value="">Semua Bulan</option>';
-                filterYearSelect.innerHTML = '<option value="">Semua Tahun</option>';
+                if (useAllOption) {
+                    const allMonthOption = document.createElement('option');
+                    allMonthOption.value = 'all';
+                    allMonthOption.textContent = 'Semua Bulan';
+                    monthSelect.appendChild(allMonthOption);
+                }
 
-                // Isi Bulan
-                months.forEach((month, index) => {
+                MONTHS.forEach((month, index) => {
                     const option = document.createElement('option');
                     option.value = (index + 1).toString().padStart(2, '0');
                     option.textContent = month;
-                    filterMonthSelect.appendChild(option);
+                    monthSelect.appendChild(option);
                 });
 
-                // Isi Tahun (sama seperti laporan)
+                if (useAllOption) {
+                    const allYearOption = document.createElement('option');
+                    allYearOption.value = 'all';
+                    allYearOption.textContent = 'Semua Tahun';
+                    yearSelect.appendChild(allYearOption);
+                }
+                
+                const currentYear = new Date().getFullYear();
                 for (let i = currentYear; i >= 2020; i--) {
                     const option = document.createElement('option');
                     option.value = i;
                     option.textContent = i;
-                    filterYearSelect.appendChild(option);
+                    yearSelect.appendChild(option);
+                }
+                
+                if (useAllOption) {
+                     monthSelect.value = 'all';
+                     yearSelect.value = 'all';
+                } else {
+                    monthSelect.value = (new Date().getMonth() + 1).toString().padStart(2, '0');
+                    yearSelect.value = currentYear;
                 }
             }
 
@@ -1416,6 +1487,10 @@
                         </tr>
                     </thead>
                     <tbody>`;
+                    
+                    // Urutkan laporan berdasarkan tanggal
+                    filteredClients.sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal));
+
                     filteredClients.forEach((client, index) => {
                         const clientAge = client.tgl_lahir ? `${calculateAge(client.tgl_lahir)}` : 'T/A';
                         reportHTML += `
@@ -1487,7 +1562,15 @@
                 doc.setFontSize(10);
                 doc.text(`Dicetak pada: ${new Date().toLocaleDateString('id-ID')}`, 14, 20);
                 const h = ["Nama", "Umur", "J. Kelamin", "Tgl Konseling", "Status Terkini"];
-                const r = clients.map(c => [c.nama || '-', c.tgl_lahir ? calculateAge(c.tgl_lahir) : 'T/A', c.jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan', formatDateToIndonesian(c.tanggal) || '-', getLatestStatus(c)]);
+                
+                // Urutkan data untuk PDF (terbaru dulu)
+                const sortedClients = [...clients].sort((a, b) => {
+                    const dateA = a.tanggal ? new Date(a.tanggal) : new Date(0);
+                    const dateB = b.tanggal ? new Date(b.tanggal) : new Date(0);
+                    return dateB - dateA;
+                });
+
+                const r = sortedClients.map(c => [c.nama || '-', c.tgl_lahir ? calculateAge(c.tgl_lahir) : 'T/A', c.jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan', formatDateToIndonesian(c.tanggal) || '-', getLatestStatus(c)]);
                 doc.autoTable({
                     head: [h],
                     body: r,
@@ -1542,18 +1625,10 @@
                 if (b?.classList.contains('delete-user-btn')) deleteItem(b.dataset.id, 'user');
             });
             
-            // MODIFIED: Ubah listener pencarian untuk memanggil renderClientTable tanpa parameter
-            searchInput.addEventListener('keyup', renderClientTable);
-
-            // NEW: Tambahkan listener untuk filter baru
-            filterMonthSelect.addEventListener('change', renderClientTable);
-            filterYearSelect.addEventListener('change', renderClientTable);
-            clearFilterBtn.addEventListener('click', () => {
-                filterMonthSelect.value = '';
-                filterYearSelect.value = '';
-                searchInput.value = '';
-                renderClientTable();
-            });
+            // Listener untuk filter data klien
+            searchInput.addEventListener('keyup', applyClientFilters);
+            filterMonth.addEventListener('change', applyClientFilters);
+            filterYear.addEventListener('change', applyClientFilters);
 
             exportPdfBtn.addEventListener('click', exportToPDF);
             exportExcelBtn.addEventListener('click', exportToExcel);
@@ -1598,11 +1673,26 @@
                     clientId: null
                 };
             });
+            
+            // --- PERBAIKAN FAGERSTROM: Modifikasi listener tombol "Ukur" ---
             showFagerstromBtn.addEventListener('click', (e) => {
                 e.preventDefault();
-                fagerstromForm.reset();
+                fagerstromForm.reset(); // Selalu reset dulu
+                
+                // Cek apakah ada jawaban sementara (dari form yg sedang diedit)
+                if (Object.keys(currentFagerstromAnswers).length > 0) {
+                    Object.keys(currentFagerstromAnswers).forEach(key => {
+                        const val = currentFagerstromAnswers[key];
+                        // Cari radio button yang sesuai dan centang
+                        const radio = fagerstromForm.querySelector(`input[name="${key}"][value="${val}"]`);
+                        if (radio) radio.checked = true;
+                    });
+                }
+                
                 fagerstromModal.style.display = 'flex';
             });
+            // -----------------------------------------------------------
+
             closeFagerstromBtn.addEventListener('click', () => fagerstromModal.style.display = 'none');
             closeUserFormBtn.addEventListener('click', () => userFormModal.style.display = 'none');
             fagerstromForm.addEventListener('submit', handleFagerstromSubmit);
