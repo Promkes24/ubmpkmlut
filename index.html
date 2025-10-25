@@ -1164,27 +1164,24 @@
             }
 
             function populateForm(client) {
-                // --- PERBAIKAN 1 ---
-                // Atur ID yang benar di awal.
                 clientIdInput.value = client.id || '';
-                // --- AKHIR PERBAIKAN 1 ---
-
+                
                 Object.keys(client).forEach(key => {
-                    // --- PERBAIKAN 2 ---
-                    // Lewati (skip) 'client-id' yang salah dari data lama
                     if (key === 'client-id') return;
-                    // --- AKHIR PERBAIKAN 2 ---
                     
                     const i = document.getElementById(key);
                     if (i) {
                         if (key === 'tgl_lahir' || key === 'tanggal') {
-                            if (i._flatpickr) i._flatpickr.setDate(parseIndonesianDate(client[key]), true);
-                            else i.value = formatDateToIndonesian(client[key]);
+                            if (i._flatpickr) {
+                                const indonesianDate = formatDateToIndonesian(client[key]);       
+                                i._flatpickr.setDate(indonesianDate || "", true);
+                            }
+                            else i.value = formatDateToIndonesian(client[key]); 
                         } else i.value = client[key];
                     }
                 });
-                const iD = parseIndonesianDate(document.getElementById('tgl_lahir').value);
-                umurInput.value = client.tgl_lahir ? calculateAge(iD) : '';
+                
+
                 motivasiValueSpan.textContent = tingkatMotivasiInput.value || '5';
                 calculateIMT();
                 updateSelectStyles();
@@ -1192,32 +1189,26 @@
 
             function handleFormSubmit(e) {
                 e.preventDefault();
-                const id = clientIdInput.value; // Ini adalah satu-satunya sumber ID
+                const id = clientIdInput.value; 
                 const cD = {};
                 clientForm.querySelectorAll('input, select, textarea').forEach(i => {
-                    // --- PERBAIKAN 3 ---
-                    // Jangan simpan field 'client-id' ke dalam data object.
-                    // ID-nya sudah kita pegang di variabel 'id'
                     if (i.id && i.id !== 'client-id') {
-                    // --- AKHIR PERBAIKAN 3 ---
                         if (i.id === 'tgl_lahir' || i.id === 'tanggal') cD[i.id] = parseIndonesianDate(i.value);
                         else cD[i.id] = i.value;
                     }
                 });
 
                 if (id) {
-                    // Ini adalah mode UPDATE
                     const i = clients.findIndex(c => c.id === id);
-                    if (i > -1) { // Pastikan klien ditemukan
+                    if (i > -1) { 
                         const existingFollowUps = clients[i].followUps || [];
                         clients[i] = {
-                            ...clients[i], // Ini akan membawa 'id' yang lama
-                            ...cD, // Ini akan menimpa dengan data baru dari form
+                            ...clients[i], 
+                            ...cD, 
                             followUps: existingFollowUps
                         };
                     }
                 } else {
-                    // Ini adalah mode CREATE
                     cD.id = Date.now().toString();
                     cD.followUps = [];
                     clients.push(cD);
