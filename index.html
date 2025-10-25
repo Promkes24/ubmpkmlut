@@ -22,15 +22,15 @@
         body {
             font-family: 'Inter', sans-serif;
         }
-
+        
         .font-montserrat {
             font-family: 'Montserrat', sans-serif;
         }
-
+        
         .fade-in {
             animation: fadeIn 0.5s ease-in-out;
         }
-
+        
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -41,7 +41,7 @@
                 transform: translateY(0);
             }
         }
-
+        
         .modal {
             display: none;
             position: fixed;
@@ -55,7 +55,7 @@
             align-items: center;
             justify-content: center;
         }
-
+        
         .modal-content {
             background-color: #fefefe;
             margin: auto;
@@ -65,7 +65,7 @@
             max-width: 500px;
             animation: fadeIn 0.3s;
         }
-
+        
         .close-btn {
             color: #aaa;
             float: right;
@@ -73,7 +73,7 @@
             font-weight: bold;
             cursor: pointer;
         }
-
+        
         .form-section {
             background-color: #f8fafc;
             border: 1px solid #e2e8f0;
@@ -81,7 +81,7 @@
             padding: 1.5rem;
             margin-bottom: 1.5rem;
         }
-
+        
         .form-section h3 {
             font-size: 1.125rem;
             font-weight: 600;
@@ -90,11 +90,11 @@
             border-bottom: 1px solid #cbd5e1;
             padding-bottom: 0.5rem;
         }
-
+        
         .form-group {
             margin-bottom: 1rem;
         }
-
+        
         .form-group label {
             display: block;
             font-size: 0.875rem;
@@ -102,7 +102,7 @@
             color: #475569;
             margin-bottom: 0.25rem;
         }
-
+        
         .form-group input,
         .form-group select,
         .form-group textarea {
@@ -113,29 +113,29 @@
             font-size: 0.875rem;
             box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
         }
-
+        
         select {
             color: #1e293b;
         }
-
+        
         select.placeholder-style {
             color: #9ca3af;
         }
-
+        
         select option {
             color: #1e293b;
         }
-
+        
         #app-container {
             display: flex;
             height: 100vh;
             width: 100vw;
         }
-
+        
         main {
             height: 100vh;
         }
-
+        
         @media print {
             body * {
                 visibility: hidden;
@@ -256,13 +256,29 @@
             <div id="client-data-screen" class="hidden fade-in">
                 <div class="flex flex-wrap gap-4 justify-between items-center mb-8">
                     <h1 class="text-3xl font-bold text-slate-800">Data Klien</h1>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <!-- NEW FILTERS -->
+                        <select id="filter-month" class="w-auto p-2 border border-slate-300 rounded-md shadow-sm text-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500">
+                            <option value="">Semua Bulan</option>
+                            <!-- Opsi bulan akan di-render oleh JS -->
+                        </select>
+                        <select id="filter-year" class="w-auto p-2 border border-slate-300 rounded-md shadow-sm text-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500">
+                            <option value="">Semua Tahun</option>
+                            <!-- Opsi tahun akan di-render oleh JS -->
+                        </select>
+                        <button id="clear-filter-btn" class="bg-slate-500 hover:bg-slate-600 text-white font-bold py-2 px-3 text-sm rounded-lg transition duration-300">
+                            Reset Filter
+                        </button>
+                        
+                        <!-- EXISTING SEARCH -->
                         <div class="flex items-center border border-slate-300 rounded-md bg-white shadow-sm focus-within:border-teal-500 focus-within:ring-1 focus-within:ring-teal-500">
                             <span class="pl-3 pr-2 text-slate-400">
                                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                             </span>
                             <input type="text" id="search-input" placeholder="Cari nama klien..." class="w-full h-full p-2 border-none focus:ring-0 rounded-r-md text-sm">
                         </div>
+                        
+                        <!-- EXISTING ADD BUTTON -->
                         <button id="add-new-client-btn" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-3 text-sm rounded-lg transition duration-300 whitespace-nowrap">
                             + Tambah Klien
                         </button>
@@ -581,7 +597,7 @@
                     <div>
                         <label class="font-semibold">4. Apakah Anda merokok lebih banyak dalam dua jam pertama hari Anda?</label>
                         <div><label><input type="radio" name="q4" value="1" required> Ya</label></div>
-                        <div><label><input ubiquity="265" type="radio" name="q4" value="0"> Tidak</label></div>
+                        <div><label ubiquity="265" type="radio" name="q4" value="0"> Tidak</label></div>
                     </div>
                     <div>
                         <label class="font-semibold">5. Apakah Anda kesulitan menahan merokok di tempat yang dilarang?</label>
@@ -688,6 +704,12 @@
             const navAdmin = document.getElementById('nav-admin');
             const navLaporan = document.getElementById('nav-laporan');
             const searchInput = document.getElementById('search-input');
+            
+            // NEW: Filter elements
+            const filterMonthSelect = document.getElementById('filter-month');
+            const filterYearSelect = document.getElementById('filter-year');
+            const clearFilterBtn = document.getElementById('clear-filter-btn');
+
             const exportPdfBtn = document.getElementById('export-pdf-btn');
             const exportExcelBtn = document.getElementById('export-excel-btn');
             const printReportBtn = document.getElementById('print-report-btn');
@@ -778,6 +800,7 @@
                 clientForm.querySelectorAll('select').forEach(select => select.addEventListener('change', updateSelectStyles));
                 document.getElementById('follow-up-status').addEventListener('change', updateSelectStyles);
                 populateDateFilters();
+                populateClientDateFilters(); // NEW: Panggil fungsi untuk mengisi filter klien
             }
 
             function showLogin() {
@@ -923,7 +946,37 @@
             }
 
             // --- RENDERING ---
-            function renderClientTable(filteredClients = clients) {
+            function renderClientTable() { // MODIFIED: Hapus parameter
+                let filteredClients = [...clients]; // MODIFIED: Mulai dengan semua klien
+                
+                // Get filter values
+                const month = filterMonthSelect.value;
+                const year = filterYearSelect.value;
+                const searchTerm = searchInput.value.toLowerCase();
+
+                // 1. Filter by Month
+                if (month) {
+                    filteredClients = filteredClients.filter(client => {
+                        return client.tanggal && client.tanggal.split('-')[1] === month;
+                    });
+                }
+
+                // 2. Filter by Year
+                if (year) {
+                    filteredClients = filteredClients.filter(client => {
+                        return client.tanggal && client.tanggal.split('-')[0] === year;
+                    });
+                }
+                
+                // 3. Filter by Search Term (Nama)
+                if (searchTerm) {
+                    filteredClients = filteredClients.filter(c => c.nama.toLowerCase().includes(searchTerm));
+                }
+
+                // 4. Sort by Tanggal Konseling (Terbaru dulu)
+                filteredClients.sort((a, b) => (b.tanggal || '').localeCompare(a.tanggal || ''));
+                
+                // --- Bagian rendering dimulai dari sini ---
                 clientTableBody.innerHTML = '';
                 if (filteredClients.length === 0) {
                     clientTableBody.innerHTML = `<tr><td colspan="7" class="text-center p-4 text-slate-500 italic">Data klien tidak ditemukan.</td></tr>`;
@@ -1111,7 +1164,17 @@
             }
 
             function populateForm(client) {
+                // --- PERBAIKAN 1 ---
+                // Atur ID yang benar di awal.
+                clientIdInput.value = client.id || '';
+                // --- AKHIR PERBAIKAN 1 ---
+
                 Object.keys(client).forEach(key => {
+                    // --- PERBAIKAN 2 ---
+                    // Lewati (skip) 'client-id' yang salah dari data lama
+                    if (key === 'client-id') return;
+                    // --- AKHIR PERBAIKAN 2 ---
+                    
                     const i = document.getElementById(key);
                     if (i) {
                         if (key === 'tgl_lahir' || key === 'tanggal') {
@@ -1129,22 +1192,32 @@
 
             function handleFormSubmit(e) {
                 e.preventDefault();
-                const id = clientIdInput.value;
+                const id = clientIdInput.value; // Ini adalah satu-satunya sumber ID
                 const cD = {};
                 clientForm.querySelectorAll('input, select, textarea').forEach(i => {
-                    if (i.id) {
+                    // --- PERBAIKAN 3 ---
+                    // Jangan simpan field 'client-id' ke dalam data object.
+                    // ID-nya sudah kita pegang di variabel 'id'
+                    if (i.id && i.id !== 'client-id') {
+                    // --- AKHIR PERBAIKAN 3 ---
                         if (i.id === 'tgl_lahir' || i.id === 'tanggal') cD[i.id] = parseIndonesianDate(i.value);
                         else cD[i.id] = i.value;
                     }
                 });
+
                 if (id) {
+                    // Ini adalah mode UPDATE
                     const i = clients.findIndex(c => c.id === id);
-                    const existingFollowUps = clients[i].followUps || [];
-                    clients[i] = { ...clients[i],
-                        ...cD,
-                        followUps: existingFollowUps
-                    };
+                    if (i > -1) { // Pastikan klien ditemukan
+                        const existingFollowUps = clients[i].followUps || [];
+                        clients[i] = {
+                            ...clients[i], // Ini akan membawa 'id' yang lama
+                            ...cD, // Ini akan menimpa dengan data baru dari form
+                            followUps: existingFollowUps
+                        };
+                    }
                 } else {
+                    // Ini adalah mode CREATE
                     cD.id = Date.now().toString();
                     cD.followUps = [];
                     clients.push(cD);
@@ -1295,6 +1368,32 @@
                 reportYearSelect.value = currentYear;
             }
 
+            // NEW: Fungsi untuk mengisi filter bulan/tahun di halaman Data Klien
+            function populateClientDateFilters() {
+                const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+                const currentYear = new Date().getFullYear();
+                
+                // Hapus opsi lama jika ada
+                filterMonthSelect.innerHTML = '<option value="">Semua Bulan</option>';
+                filterYearSelect.innerHTML = '<option value="">Semua Tahun</option>';
+
+                // Isi Bulan
+                months.forEach((month, index) => {
+                    const option = document.createElement('option');
+                    option.value = (index + 1).toString().padStart(2, '0');
+                    option.textContent = month;
+                    filterMonthSelect.appendChild(option);
+                });
+
+                // Isi Tahun (sama seperti laporan)
+                for (let i = currentYear; i >= 2020; i--) {
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = i;
+                    filterYearSelect.appendChild(option);
+                }
+            }
+
             function generateReport() {
                 const month = reportMonthSelect.value;
                 const year = reportYearSelect.value;
@@ -1349,8 +1448,7 @@
                 const printContent = document.getElementById('report-content-print').innerHTML;
                 const printWindow = window.open('', '', 'height=600,width=800');
                 printWindow.document.write('<html><head><title>Laporan Konseling UBM</title>');
-                printWindow.document.write('<script src="https://cdn.tailwindcss.com"><\/script>');
-                printWindow.document.write('<style>body { font-family: Inter, sans-serif; padding: 1rem; } table { width: 100%; border-collapse: collapse; font-size: 0.8rem;} th, td { border: 1px solid #ddd; padding: 6px; text-align: left;} thead { background-color: #f2f2f2; }</style>');
+                printWindow.document.write('<style>body { font-family: Inter, sans-serif; padding: 1rem; } h2 { text-align: center; font-size: 1.25rem; font-weight: bold; margin-bottom: 0.5rem; } p { text-align: center; color: #475569; margin-bottom: 1.5rem; } table { width: 100%; border-collapse: collapse; font-size: 0.8rem;} th, td { border: 1px solid #ddd; padding: 6px; text-align: left;} thead { background-color: #f2f2f2; }</style>');
                 printWindow.document.write('</head><body>');
                 printWindow.document.write(printContent);
                 printWindow.document.write('</body></html>');
@@ -1452,10 +1550,20 @@
                 if (b?.classList.contains('edit-user-btn')) showUserForm(b.dataset.id);
                 if (b?.classList.contains('delete-user-btn')) deleteItem(b.dataset.id, 'user');
             });
-            searchInput.addEventListener('keyup', (e) => {
-                const s = e.target.value.toLowerCase();
-                renderClientTable(clients.filter(c => c.nama.toLowerCase().includes(s)));
+            
+            // MODIFIED: Ubah listener pencarian untuk memanggil renderClientTable tanpa parameter
+            searchInput.addEventListener('keyup', renderClientTable);
+
+            // NEW: Tambahkan listener untuk filter baru
+            filterMonthSelect.addEventListener('change', renderClientTable);
+            filterYearSelect.addEventListener('change', renderClientTable);
+            clearFilterBtn.addEventListener('click', () => {
+                filterMonthSelect.value = '';
+                filterYearSelect.value = '';
+                searchInput.value = '';
+                renderClientTable();
             });
+
             exportPdfBtn.addEventListener('click', exportToPDF);
             exportExcelBtn.addEventListener('click', exportToExcel);
             generateReportBtn.addEventListener('click', generateReport);
